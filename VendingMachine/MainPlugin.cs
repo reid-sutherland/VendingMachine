@@ -3,15 +3,15 @@ using System.IO;
 using Exiled.API.Enums;
 using Exiled.API.Features;
 
-namespace Scp294;
+namespace VendingMachine;
 
 public class MainPlugin : Plugin<Config>
 {
     public override string Author { get; } = "DeadServer Team";
 
-    public override string Name { get; } = "VendingMachine";
+    public override string Name { get; } = "SCP-294";
 
-    public override string Prefix { get; } = "vending_machine";
+    public override string Prefix { get; } = "VendingMachine";
 
     public override Version Version { get; } = new(1, 0, 0);
 
@@ -35,7 +35,7 @@ public class MainPlugin : Plugin<Config>
 
         Singleton = this;
 
-        Exiled.Events.Handlers.Player.UsedItem += VendingMachine.OnUsedItem;
+        Exiled.Events.Handlers.Player.SearchingPickup += VendingMachine.OnInteracted;
         Exiled.Events.Handlers.Player.VoiceChatting += VendingMachine.OnVoiceChatting;
         Exiled.Events.Handlers.Player.Dying += VendingMachine.OnDying;
         Exiled.Events.Handlers.Server.RoundStarted += VendingMachine.OnRoundStart;
@@ -52,7 +52,7 @@ public class MainPlugin : Plugin<Config>
         // Internal
         //Exiled.Events.Handlers.Server.WaitingForPlayers -= OnWaitingForPlayers;
 
-        Exiled.Events.Handlers.Player.UsedItem -= VendingMachine.OnUsedItem;
+        Exiled.Events.Handlers.Player.SearchingPickup -= VendingMachine.OnInteracted;
         Exiled.Events.Handlers.Player.VoiceChatting -= VendingMachine.OnVoiceChatting;
         Exiled.Events.Handlers.Player.Dying -= VendingMachine.OnDying;
         Exiled.Events.Handlers.Server.RoundStarted -= VendingMachine.OnRoundStart;
