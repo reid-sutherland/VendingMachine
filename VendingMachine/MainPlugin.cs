@@ -1,7 +1,12 @@
 using System;
 using System.IO;
+using AdvancedMERTools;
 using Exiled.API.Enums;
 using Exiled.API.Features;
+using UnityEngine;
+using UnityEngine.Rendering;
+using UserSettings.ServerSpecific;
+using Random = System.Random;
 
 namespace VendingMachine;
 
@@ -9,7 +14,7 @@ public class MainPlugin : Plugin<Config>
 {
     public override string Author { get; } = "DeadServer Team";
 
-    public override string Name { get; } = "SCP-294";
+    public override string Name { get; } = "Vending Machine";
 
     public override string Prefix { get; } = "VendingMachine";
 
@@ -17,13 +22,17 @@ public class MainPlugin : Plugin<Config>
 
     public override Version RequiredExiledVersion { get; } = new(9, 5, 0);
 
+    public override PluginPriority Priority { get; } = PluginPriority.Last;
+
     public static MainPlugin Singleton { get; private set; }
 
     public static Config Configs => Singleton.Config;
 
-    public Scp294 VendingMachine { get; private set; }
+    public Scp294 Scp294 { get; private set; }
 
-    public override PluginPriority Priority { get; } = PluginPriority.Last;
+    public static Random Random { get; private set; }
+
+    public const int EVALUE = 101;
 
     public override void OnEnabled()
     {
@@ -34,33 +43,100 @@ public class MainPlugin : Plugin<Config>
         }
 
         Singleton = this;
+        Scp294 = new();
+        Random = new();
 
-        Exiled.Events.Handlers.Player.SearchingPickup += VendingMachine.OnInteracted;
-        Exiled.Events.Handlers.Player.VoiceChatting += VendingMachine.OnVoiceChatting;
-        Exiled.Events.Handlers.Player.Dying += VendingMachine.OnDying;
-        Exiled.Events.Handlers.Server.RoundStarted += VendingMachine.OnRoundStart;
-        Exiled.Events.Handlers.Server.EndingRound += VendingMachine.OnEndingRound;
-
-        // Internal
-        //Exiled.Events.Handlers.Server.WaitingForPlayers += OnWaitingForPlayers;
+        ServerSpecificSettingsSync.ServerOnSettingValueReceived += OnSSInput;
+        Exiled.Events.Handlers.Server.RoundStarted += Scp294.OnRoundStart;
+        Exiled.Events.Handlers.Server.EndingRound += Scp294.OnEndingRound;
 
         base.OnEnabled();
     }
 
     public override void OnDisabled()
     {
-        // Internal
-        //Exiled.Events.Handlers.Server.WaitingForPlayers -= OnWaitingForPlayers;
+        base.OnDisabled();
 
-        Exiled.Events.Handlers.Player.SearchingPickup -= VendingMachine.OnInteracted;
-        Exiled.Events.Handlers.Player.VoiceChatting -= VendingMachine.OnVoiceChatting;
-        Exiled.Events.Handlers.Player.Dying -= VendingMachine.OnDying;
-        Exiled.Events.Handlers.Server.RoundStarted -= VendingMachine.OnRoundStart;
-        Exiled.Events.Handlers.Server.EndingRound -= VendingMachine.OnEndingRound;
+        ServerSpecificSettingsSync.ServerOnSettingValueReceived += OnSSInput;
+        Exiled.Events.Handlers.Server.RoundStarted -= Scp294.OnRoundStart;
+        Exiled.Events.Handlers.Server.EndingRound -= Scp294.OnEndingRound;
 
         Singleton = null;
-        VendingMachine = null;
-        base.OnDisabled();
+        Scp294 = null;
+    }
+
+    public void OnSSInput(ReferenceHub sender, ServerSpecificSettingBase setting)
+    {
+        if (setting.OriginalDefinition is SSKeybindSetting sSKeybind && (setting as SSKeybindSetting).SyncIsPressed)
+        {
+            KeyCode key = sSKeybind.SuggestedKey;
+            if ((int)key == EVALUE && Physics.Raycast(sender.PlayerCameraReference.position, sender.PlayerCameraReference.forward, out RaycastHit hit, 1000f, 1))
+            {
+                foreach (InteractableObject interactable in hit.collider.GetComponentsInParent<InteractableObject>())
+                {
+                    Log.Debug($"-- Player {Player.Get(sender)} interacted with object: {hit.collider.gameObject.name} - interactable: {interactable.gameObject.name} - distance: {hit.distance}");
+                    if (hit.distance <= interactable.Base.InteractionMaxRange)
+                    {
+                        Player player = Player.Get(sender);
+                        switch (interactable.gameObject.name)
+                        {
+                            case Scp294.ControlPanelName:
+                                Scp294.OnControlPanelInteracted(player);
+                                break;
+                            case Scp294.DrawerName:
+                                Scp294.OnDrawerInteracted(player);
+                                break;
+                            default:
+                                Log.Debug($"Unknown interactable: {interactable.gameObject.name}");
+                                break;
+                        }
+                    }
+                }
+            }
+        }
+    }
+
+    public void PlaySound()
+    {
+        //public string AudioName;
+        //[Header("0: Loop")]
+        //public int PlayCount;
+        //public bool IsSpatial;
+        //public float MaxDistance;
+        //public float MinDistance;
+        //public float Volume;
+        //public SVector3 LocalPlayPosition;
+        //public AudioPlayer AP;
+        //bool loaded;
+
+        //MEC.Timing.CallDelayed(1.0f, () =>
+        //{
+        //    loaded = false;
+        //    if (!loaded)
+        //    {
+        //        if (!Directory.Exists(Configs.AudioFolderPath))
+        //        {
+        //            ServerConsole.AddLog("Cannot find Audio Folder Directory!", ConsoleColor.Red);
+        //            return;
+        //        }
+        //        if (!AudioClipStorage.AudioClips.ContainsKey(AudioName))
+        //            AudioClipStorage.LoadClip(Path.Combine(AdvancedMERTools.Singleton.Config.AudioFolderPath, AudioName), AudioName);
+        //        loaded = true;
+        //    }
+
+        //    if (AP == null)
+        //    {
+        //        AP = AudioPlayer.Create($"AudioHandler-{args.transform.GetHashCode()}-{GetHashCode()}");
+        //        Speaker speaker = AP.AddSpeaker("Primary", args.transform.TransformPoint(LocalPlayPosition), Volume, IsSpatial, MinDistance, MaxDistance);
+        //        AP.transform.parent = speaker.transform.parent = args.transform;
+        //        AP.transform.localPosition = speaker.transform.localPosition = LocalPlayPosition;
+        //        //ServerConsole.AddLog(speaker.transform.position.ToPreciseString());
+        //    }
+        //    if (PlayCount == 0)
+        //        AP.AddClip(AudioName, Volume, true, false);
+        //    for (int i = 0; i < PlayCount; i++)
+        //        AP.AddClip(AudioName, Volume, false, false);
+        //});
     }
 
     //private static void OnWaitingForPlayers() => StartupChecks.UnRegisterIncompatibilities();

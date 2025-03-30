@@ -1,21 +1,16 @@
-﻿namespace VendingMachine.ConfigObjects
+﻿using VendingMachine.Drinks;
+
+namespace VendingMachine.ConfigObjects;
+
+public class DrinkChance : IChanceObject
 {
-    public class ItemUpgradeChance
+    public CustomItemType ItemType { get; set; }
+
+    public double Chance { get; set; }
+
+    public void Deconstruct(out CustomItemType itemType, out double chance)
     {
-        public string Original { get; set; }
-
-        public string New { get; set; }
-
-        public double Chance { get; set; }
-
-        public int Count { get; set; } = 1;
-
-        public void Deconstruct(out string originalItem, out string destinationItem, out double chance, out int count)
-        {
-            originalItem = Original;
-            destinationItem = New;
-            chance = Chance;
-            count = Count;
-        }
+        itemType = ItemType;
+        chance = Chance;
     }
 }

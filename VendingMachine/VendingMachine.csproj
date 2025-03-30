@@ -23,6 +23,7 @@
 	</ItemGroup>
 
 	<ItemGroup>
+		<Reference Include="AdvancedMERTools" HintPath="$(EXILED_PLUGINS)\AdvancedMERTools.dll" Private="false" />
 		<Reference Include="MapEditorReborn" HintPath="$(EXILED_PLUGINS)\MapEditorReborn.dll" Private="false" />
 	</ItemGroup>
 
