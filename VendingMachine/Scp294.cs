@@ -93,11 +93,11 @@ public class Scp294
             // TODO: Add some sounds
 
             Log.Debug($"{DrawerCount} drinks in the drawer, dispensing");
-            string itemType = GetRandomDrink();
-            player.AddItem(new GobbyPop())
-            Log.Debug($"Got random drink: {itemType}");
+            //string itemType = GetRandomDrink();
+            //player.AddItem(new GobbyPop())
+            //Log.Debug($"Got random drink: {itemType}");
 
-            player.AddItem(itemType);
+            //player.AddItem(itemType);
             DrawerCount--;
         }
         catch (Exception ex)
@@ -180,27 +180,27 @@ public class Scp294
         //ev.Player.Scale = Vector3.one;
     }
 
-    private CustomItem GetRandomDrink()
-    {
-        double roll = Utils.RollChance(MainPlugin.Configs.DrinkChances);
-        Log.Debug($"GetRandomDrink(): rolled: {roll}");
-        foreach ((CustomItemType itemType, double chance) in MainPlugin.Configs.DrinkChances)
-        {
-            Log.Debug($"-- current roll: {roll} - current chance: {chance}");
-            if (roll <= chance)
-            {
-                Log.Debug($"-- selected item type: {itemType}");
+    //private CustomItem GetRandomDrink()
+    //{
+    //    double roll = Utils.RollChance(MainPlugin.Configs.DrinkChances);
+    //    Log.Debug($"GetRandomDrink(): rolled: {roll}");
+    //    foreach ((CustomItemType itemType, double chance) in MainPlugin.Configs.DrinkChances)
+    //    {
+    //        Log.Debug($"-- current roll: {roll} - current chance: {chance}");
+    //        if (roll <= chance)
+    //        {
+    //            Log.Debug($"-- selected item type: {itemType}");
 
                 
-                return;
-            }
+    //            return;
+    //        }
 
-            if (MainPlugin.Configs.AdditiveProbabilities)
-            {
-                roll -= chance;
-            }
-        }
-    }
+    //        if (MainPlugin.Configs.AdditiveProbabilities)
+    //        {
+    //            roll -= chance;
+    //        }
+    //    }
+    //}
 
     private KeyValuePair<RoomType, Tuple<Vector3, Vector3>> GetRandomSpawnPoint()
     {
