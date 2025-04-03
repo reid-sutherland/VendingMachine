@@ -3,9 +3,13 @@ using System.IO;
 using AdvancedMERTools;
 using Exiled.API.Enums;
 using Exiled.API.Features;
+using Exiled.CustomItems.API;
+using Exiled.CustomItems.API.Features;
+using MEC;
 using UnityEngine;
 using UnityEngine.Rendering;
 using UserSettings.ServerSpecific;
+using VendingMachine.Drinks;
 using Random = System.Random;
 
 namespace VendingMachine;
@@ -50,6 +54,28 @@ public class MainPlugin : Plugin<Config>
         Exiled.Events.Handlers.Server.RoundStarted += Scp294.OnRoundStart;
         Exiled.Events.Handlers.Server.EndingRound += Scp294.OnEndingRound;
 
+        // Register custom items here
+        Timing.CallDelayed(5f, () =>
+        {
+            Log.Debug("Registering custom items...");
+            try
+            {
+                //// If this doesn't work, change the config class to be more like CustomItems i guess idk
+                //System.Collections.Generic.List<CustomDrink> drinks = new()
+                //{
+                //    new GobbyPop(),
+                //};
+                //CustomItem.RegisterItems(overrideClass: drinks);
+
+                CustomItem.RegisterItems(overrideClass: Configs);
+            }
+            catch (Exception ex)
+            {
+                Log.Error("Some custom items failed to register");
+                Log.Debug(ex);
+            }
+        });
+
         base.OnEnabled();
     }
 
@@ -57,7 +83,7 @@ public class MainPlugin : Plugin<Config>
     {
         base.OnDisabled();
 
-        ServerSpecificSettingsSync.ServerOnSettingValueReceived += OnSSInput;
+        ServerSpecificSettingsSync.ServerOnSettingValueReceived -= OnSSInput;
         Exiled.Events.Handlers.Server.RoundStarted -= Scp294.OnRoundStart;
         Exiled.Events.Handlers.Server.EndingRound -= Scp294.OnEndingRound;
 
@@ -74,7 +100,7 @@ public class MainPlugin : Plugin<Config>
             {
                 foreach (InteractableObject interactable in hit.collider.GetComponentsInParent<InteractableObject>())
                 {
-                    Log.Debug($"-- Player {Player.Get(sender)} interacted with object: {hit.collider.gameObject.name} - interactable: {interactable.gameObject.name} - distance: {hit.distance}");
+                    Log.Debug($"-- Player {Player.Get(sender).Nickname} interacted with object: {hit.collider.gameObject.name} - interactable: {interactable.gameObject.name} - distance: {hit.distance}");
                     if (hit.distance <= interactable.Base.InteractionMaxRange)
                     {
                         Player player = Player.Get(sender);

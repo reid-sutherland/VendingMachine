@@ -3,13 +3,12 @@ using System.Linq;
 using System.Collections.Generic;
 using Exiled.API.Enums;
 using Exiled.API.Features;
-using Exiled.CustomItems.API.Features;
 using Exiled.Events.EventArgs.Server;
-using Exiled.Events.EventArgs.Player;
 using MapEditorReborn.API.Features;
 using MapEditorReborn.API.Features.Objects;
 using UnityEngine;
 using VendingMachine.Drinks;
+using System.Reflection;
 
 namespace VendingMachine;
 
@@ -28,10 +27,6 @@ public class Scp294
     public const string DrawerName = "SCP294Drawer";
 
     public int DrawerCount { get; private set; } = 0;
-
-    public Scp294()
-    {
-    }
 
     public void OnControlPanelInteracted(Player player)
     {
@@ -54,7 +49,6 @@ public class Scp294
                 return;
             }
 
-            Log.Debug($"Player was holding a coin - removing coin and adding to drawer count");
             player.RemoveItem(player.CurrentItem);
             DrawerCount++;
         }
@@ -73,7 +67,7 @@ public class Scp294
 
         try
         {
-            Log.Debug($"Player {player.Nickname} interacted with the vending machine drawer");
+            Log.Debug($"Player interacted with the vending machine drawer");
             if (player.IsScp)
             {
                 Log.Debug("Player was SCP");
@@ -93,12 +87,18 @@ public class Scp294
             // TODO: Add some sounds
 
             Log.Debug($"{DrawerCount} drinks in the drawer, dispensing");
-            //string itemType = GetRandomDrink();
-            //player.AddItem(new GobbyPop())
-            //Log.Debug($"Got random drink: {itemType}");
-
-            //player.AddItem(itemType);
-            DrawerCount--;
+            bool success = GetRandomDrink(out CustomDrink randomDrink);
+            if (success)
+            {
+                // TODO: use other Give() method for scp207 and antiscp207
+                Log.Debug($"Giving random drink: {randomDrink.Name} to player: {player.Nickname}");
+                randomDrink.Give(player);
+                DrawerCount--;
+            }
+            else
+            {
+                Log.Error("Failed to get random drink :(");
+            }
         }
         catch (Exception ex)
         {
@@ -160,47 +160,35 @@ public class Scp294
         model = null;
     }
 
-    public void OnVoiceChatting(VoiceChattingEventArgs ev)
+    private bool GetRandomDrink(out CustomDrink outDrink)
     {
-        // TODO: It'd be funny to add a Helium soda that just makes your voice high pitched lol
+        int roll = Utils.RollChanceFromConfig(MainPlugin.Configs);
+        Log.Debug($"GetRandomDrink(): rolled: {roll}");
 
-        //if (!ev.Player.GameObject.TryGetComponent(out Scp559SizeEffect _))
-        //    return;
-        //ev.VoiceMessage = VoicePitchUtilities.SetVoicePitch(ev.VoiceMessage);
+        outDrink = null;
+        foreach (PropertyInfo pInfo in MainPlugin.Configs.GetType().GetProperties())
+        {
+            if (typeof(CustomDrink).IsAssignableFrom(pInfo.PropertyType))
+            {
+                var drink = pInfo.GetValue(MainPlugin.Configs) as CustomDrink;
+                if (drink is not null)
+                {
+                    Log.Debug($"-- current roll: {roll} - current chance: {drink.Chance}");
+                    if (roll <= drink.Chance)
+                    {
+                        outDrink = drink;
+                        return true;
+                    }
+
+                    if (MainPlugin.Configs.AdditiveProbabilities)
+                    {
+                        roll -= drink.Chance;
+                    }
+                }
+            }
+        }
+        return false;
     }
-
-    public void OnDying(DyingEventArgs ev)
-    {
-        // TODO: Use this example for adding custom new sodas
-
-        //if (!ev.Player.GameObject.TryGetComponent(out Scp559SizeEffect scp559Effect))
-        //    return;
-
-        //Object.Destroy(scp559Effect);
-        //ev.Player.Scale = Vector3.one;
-    }
-
-    //private CustomItem GetRandomDrink()
-    //{
-    //    double roll = Utils.RollChance(MainPlugin.Configs.DrinkChances);
-    //    Log.Debug($"GetRandomDrink(): rolled: {roll}");
-    //    foreach ((CustomItemType itemType, double chance) in MainPlugin.Configs.DrinkChances)
-    //    {
-    //        Log.Debug($"-- current roll: {roll} - current chance: {chance}");
-    //        if (roll <= chance)
-    //        {
-    //            Log.Debug($"-- selected item type: {itemType}");
-
-                
-    //            return;
-    //        }
-
-    //        if (MainPlugin.Configs.AdditiveProbabilities)
-    //        {
-    //            roll -= chance;
-    //        }
-    //    }
-    //}
 
     private KeyValuePair<RoomType, Tuple<Vector3, Vector3>> GetRandomSpawnPoint()
     {
@@ -213,7 +201,7 @@ public class Scp294
     // Tuple values are <offset, rotation> where rotation is the euler angles of the Quaternion
     public static readonly Dictionary<RoomType, Tuple<Vector3, Vector3>> SpawnPoints = new()
     {
-        [RoomType.EzCurve] = Tuple.Create(new Vector3(0.894f, 0.565f, 1.638f), new Vector3(0.0f, 225.0f, 0.0f)),    // this works when room rotation is (0, 0, 0, -1)
+        //[RoomType.EzCurve] = Tuple.Create(new Vector3(0.894f, 0.565f, 1.638f), new Vector3(0.0f, 225.0f, 0.0f)),    // this works when room rotation is (0, 0, 0, -1)
         [RoomType.EzIntercom] = Tuple.Create(new Vector3(-0.176f, 0.547f, -4.437f), new Vector3(0.0f, -90.0f, 0.0f)),
 
         //[RoomType.EzCheckpointHallwayA] = new Vector3(0.0f, 0.0f, 0.0f),
