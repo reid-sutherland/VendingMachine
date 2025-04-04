@@ -5,11 +5,10 @@ using YamlDotNet.Serialization;
 
 namespace VendingMachine.Drinks;
 
-// TODO: I think we can get rid of IChanceObject here
 public abstract class CustomDrink : CustomItem
 {
     // This should ONLY be defined in the config.
-    [Description("The chance that the vending machine (SCP-294) dispenses this drink.")]
+    [Description("The chance that the drink is dispensed.")]
     public int Chance { get; set; }
 
     // This is defined here so that the config can't try to define a spawn location, since drinks come out of the vending machine.

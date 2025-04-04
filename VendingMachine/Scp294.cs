@@ -9,6 +9,7 @@ using MapEditorReborn.API.Features.Objects;
 using UnityEngine;
 using VendingMachine.Drinks;
 using System.Reflection;
+using InventorySystem.Items.Usables;
 
 namespace VendingMachine;
 
@@ -162,10 +163,12 @@ public class Scp294
 
     private bool GetRandomDrink(out CustomDrink outDrink)
     {
+        //out Consumable outConsumable
         int roll = Utils.RollChanceFromConfig(MainPlugin.Configs);
         Log.Debug($"GetRandomDrink(): rolled: {roll}");
 
         outDrink = null;
+        //outConsumable = null;
         foreach (PropertyInfo pInfo in MainPlugin.Configs.GetType().GetProperties())
         {
             if (typeof(CustomDrink).IsAssignableFrom(pInfo.PropertyType))
@@ -173,7 +176,7 @@ public class Scp294
                 var drink = pInfo.GetValue(MainPlugin.Configs) as CustomDrink;
                 if (drink is not null)
                 {
-                    Log.Debug($"-- current roll: {roll} - current chance: {drink.Chance}");
+                    Log.Debug($"-- current roll: {roll} - current chance: {drink.Chance} for drink: {drink.Name}");
                     if (roll <= drink.Chance)
                     {
                         outDrink = drink;
@@ -186,6 +189,10 @@ public class Scp294
                     }
                 }
             }
+            //else if (pInfo.PropertyType == typeof(Scp207) || pInfo.PropertyType == typeof(AntiScp207))
+            //{
+            //    var drink = 
+            //}
         }
         return false;
     }

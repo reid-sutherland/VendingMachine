@@ -14,7 +14,7 @@ namespace VendingMachine.Drinks;
 public class GobbyPop : CustomDrink
 {
     [YamlIgnore]
-    public override uint Id { get; set; } = 0;
+    public override uint Id { get; set; } = 2;
 
     [YamlIgnore]
     public override string Name { get; set; } = "Gobby-Pop";
@@ -27,6 +27,9 @@ public class GobbyPop : CustomDrink
 
     [Description("How long the effect lasts for. A value of 0 means infinite.")]
     public float Duration { get; set; } = 15.0f;
+
+    [Description("Effect given to non-gobbys. Defaults to RainbowTaste which reduces negative effects.")]
+    public EffectType Effect { get; set; } = EffectType.RainbowTaste;
 
     private EffectType SelectedEffect { get; set; } = EffectType.None;
 
@@ -63,7 +66,7 @@ public class GobbyPop : CustomDrink
         }
         else
         {
-            SelectedEffect = EffectType.RainbowTaste;
+            SelectedEffect = Effect;
         }
         Log.Debug($"Enabling effect: {SelectedEffect} on player: {ev.Player.Nickname}");
         ev.Player.EnableEffect(SelectedEffect);
