@@ -34,12 +34,15 @@ public class MainPlugin : Plugin<Config>
 
     public Scp294 Scp294 { get; private set; }
 
+    public readonly string AudioPath = Path.Combine(Paths.Plugins, "audio\\SCP294\\");
+
     public static Random Random { get; private set; }
 
     public const int EVALUE = 101;
 
     public override void OnEnabled()
     {
+        Log.Error(AudioPath);
         if (!File.Exists(Path.Combine(Paths.Plugins, "MapEditorReborn.dll")))
         {
             Log.Error("MapEditorReborn is missing!, aborting plugin startup.");

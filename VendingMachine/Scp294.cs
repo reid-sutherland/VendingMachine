@@ -9,6 +9,8 @@ using MapEditorReborn.API.Features.Objects;
 using UnityEngine;
 using VendingMachine.Drinks;
 using System.Reflection;
+using System.IO;
+using MEC;
 
 namespace VendingMachine;
 
@@ -16,6 +18,7 @@ public class Scp294
 {
     public Scp294()
     {
+        LoadAudioClip();
         Log.Debug("Scp294 CONSTRUCTED");
     }
 
@@ -32,6 +35,11 @@ public class Scp294
     public const string DrawerName = "SCP294Drawer";
 
     public int DrawerCount { get; private set; } = 0;
+
+    private readonly string[] audioAmbient = { "song1.ogg", "song2.ogg", "song3.ogg" };
+    private readonly string[] audioEffects = { "DispenseDrink.ogg" };
+
+    private CoroutineHandle handle;
 
     public void OnControlPanelInteracted(Player player)
     {
@@ -56,6 +64,8 @@ public class Scp294
 
             player.RemoveItem(player.CurrentItem);
             DrawerCount++;
+
+            PlayAudioClip("DispenseDrink");
         }
         catch (Exception ex)
         {
@@ -143,6 +153,9 @@ public class Scp294
                     Log.Info($"Vending machine spawned in room: {model.CurrentRoom}");
                     Log.Debug($"-- room position: {room.Position} - room euler rotation: {room.Rotation.eulerAngles}");
                     Log.Debug($"-- model position: {model.Position} - model euler rotation: {model.Rotation.eulerAngles}");
+
+
+                    handle = Timing.RunCoroutine(AmbientAudioCoroutine());
                 }
                 else
                 {
@@ -162,6 +175,7 @@ public class Scp294
     public void OnRoundEnded(RoundEndedEventArgs ev)
     {
         Log.Debug("Round ended");
+        Timing.KillCoroutines(handle);
         model?.Destroy();
         model = null;
     }
@@ -220,4 +234,60 @@ public class Scp294
         //[RoomType.EzGateA] = Tuple.Create(new Vector3(2.834f, 0.553f, -3.926f), Quaternion.Euler(0.0f, 90f, 0.0f)),
         //[RoomType.EzGateB] = new Vector3(0.0f, 0.0f, 0.0f),
     };
+    private IEnumerator<float> AmbientAudioCoroutine()
+    {
+        System.Random rnd = new System.Random();
+        for (; ; ) //repeat the following infinitely
+        {
+            int rand = rnd.Next(0, audioAmbient.Length);
+            Log.Debug($"Playing audio {audioAmbient[rand]}");
+
+            PlayAudioClip(audioAmbient[rand].Replace(".ogg", ""));
+
+            int waitTime = rnd.Next(120, 240);
+            Log.Debug($"Waiting {waitTime} seconds before playing ambient audio");
+            yield return Timing.WaitForSeconds((float)waitTime);
+        }
+    }
+
+    private void LoadAudioClip()
+    {
+        foreach (string clip in audioEffects)
+        {
+            Log.Debug($"{clip.Replace(".ogg", "")}");
+            if (!AudioClipStorage.LoadClip(MainPlugin.Singleton.AudioPath + clip, clip.Replace(".ogg", "")))
+            {
+                Log.Error($"Failed to load clip: {MainPlugin.Singleton.AudioPath}{clip}");
+            }
+        }
+
+        foreach (string clip in audioAmbient)
+        {
+            Log.Debug($"{clip.Replace(".ogg", "")}");
+            if (!AudioClipStorage.LoadClip(MainPlugin.Singleton.AudioPath + clip, clip.Replace(".ogg", "")))
+            {
+                Log.Error($"Failed to load clip: {MainPlugin.Singleton.AudioPath}{clip}");
+            }
+        }
+    }
+    private void PlayAudioClip(string clip)
+    {
+        AudioPlayer audioPlayer = AudioPlayer.CreateOrGet(this.GetType().Name, onIntialCreation: (p) =>
+        {
+            // Attach created audio player to player.
+            p.transform.parent = model.transform;
+
+            // This created speaker will be in 3D space.
+            Speaker speaker = p.AddSpeaker("Main", isSpatial: true, minDistance: 1f, maxDistance: 15f);
+
+            // Attach created speaker to player.
+            speaker.transform.parent = model.transform;
+
+            // Set local positino to zero to make sure that speaker is in player.
+            speaker.transform.localPosition = Vector3.zero;
+        });
+        Log.Debug($"Transform {model.transform.position}");
+
+        audioPlayer.AddClip(clip);
+    }
 }
