@@ -33,6 +33,6 @@ public sealed class Config : IConfig
     [Description("A regular AntiSCP-207")]
     public AntiScp207 AntiScp207 { get; set; } = new();
 
-    [Description("Gobby-Pop. Gives gobby a heart attack. Configurable effect for others.")]
+    [Description("Gobby-Pop. Makes gobby blind. Configurable effect for others.")]
     public GobbyPop GobbyPop { get; set; } = new();
 }

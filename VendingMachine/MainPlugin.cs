@@ -51,8 +51,8 @@ public class MainPlugin : Plugin<Config>
         Random = new();
 
         ServerSpecificSettingsSync.ServerOnSettingValueReceived += OnSSInput;
-        Exiled.Events.Handlers.Server.RoundStarted += Scp294.OnRoundStart;
-        Exiled.Events.Handlers.Server.EndingRound += Scp294.OnEndingRound;
+        Exiled.Events.Handlers.Server.RoundStarted += Scp294.OnRoundStarted;
+        Exiled.Events.Handlers.Server.RoundEnded += Scp294.OnRoundEnded;
 
         // Register custom items here
         Timing.CallDelayed(5f, () =>
@@ -60,13 +60,6 @@ public class MainPlugin : Plugin<Config>
             Log.Debug("Registering custom items...");
             try
             {
-                //// If this doesn't work, change the config class to be more like CustomItems i guess idk
-                //System.Collections.Generic.List<CustomDrink> drinks = new()
-                //{
-                //    new GobbyPop(),
-                //};
-                //CustomItem.RegisterItems(overrideClass: drinks);
-
                 CustomItem.RegisterItems(overrideClass: Configs);
             }
             catch (Exception ex)
@@ -84,8 +77,8 @@ public class MainPlugin : Plugin<Config>
         base.OnDisabled();
 
         ServerSpecificSettingsSync.ServerOnSettingValueReceived -= OnSSInput;
-        Exiled.Events.Handlers.Server.RoundStarted -= Scp294.OnRoundStart;
-        Exiled.Events.Handlers.Server.EndingRound -= Scp294.OnEndingRound;
+        Exiled.Events.Handlers.Server.RoundStarted -= Scp294.OnRoundStarted;
+        Exiled.Events.Handlers.Server.RoundEnded -= Scp294.OnRoundEnded;
 
         Singleton = null;
         Scp294 = null;

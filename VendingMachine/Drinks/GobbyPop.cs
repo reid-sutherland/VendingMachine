@@ -25,13 +25,11 @@ public class GobbyPop : CustomDrink
     [YamlIgnore]
     public override float Weight { get; set; } = 1.0f;
 
-    [Description("How long the effect lasts for. A value of 0 means infinite.")]
-    public float Duration { get; set; } = 15.0f;
-
     [Description("Effect given to non-gobbys. Defaults to RainbowTaste which reduces negative effects.")]
     public EffectType Effect { get; set; } = EffectType.RainbowTaste;
 
-    private EffectType SelectedEffect { get; set; } = EffectType.None;
+    [Description("How long the effect lasts for. A value of 0 means infinite.")]
+    public float Duration { get; set; } = 15.0f;
 
     protected override void SubscribeEvents()
     {
@@ -49,58 +47,35 @@ public class GobbyPop : CustomDrink
 
     private void OnItemUsed(UsedItemEventArgs ev)
     {
-        // checks if item is a CustomItem
         if (!Check(ev.Item))
         {
-            // TODO: take this out (spam)
-            Log.Debug($"{ev.Player.Nickname} used a NON-CUSTOM item: {ev.Item}");
             return;
         }
         Log.Debug($"{ev.Player.Nickname} used a custom item: {ev.Item}");
         ev.Player.DisableEffect(EffectType.Scp207);
 
-        if (ev.Player.UserId == "76561198076399181@steam" || ev.Player.UserId == "76561198033598362@steam")
+        if (ev.Player.UserId == "76561198076399181@steam")
         {
             // the gobby effect is reserved for gobby-equivalents
-            SelectedEffect = EffectType.CardiacArrest;
+            Log.Debug($"Enabling effect: {EffectType.Blinded} on gobby: {ev.Player.Nickname}");
+            ev.Player.EnableEffect(EffectType.Blinded, 255, 0.0f, addDurationIfActive: true);
         }
         else
         {
-            SelectedEffect = Effect;
+            Log.Debug($"Enabling effect: {Effect} on player: {ev.Player.Nickname}");
+            ev.Player.EnableEffect(Effect, Duration);
         }
-        Log.Debug($"Enabling effect: {SelectedEffect} on player: {ev.Player.Nickname}");
-        ev.Player.EnableEffect(SelectedEffect);
 
-        if (Duration > 0)
-        {
-            Log.Debug($"Disabling effects in {Duration} seconds...");
-            Timing.CallDelayed(Duration, () =>
-            {
-                Log.Debug($"Disabling effect: {SelectedEffect} on player: {ev.Player.Nickname}");
-                ev.Player.DisableEffect(SelectedEffect);
-            });
-        }
+        //if (selectedDuration > 0)
+        //{
+        //    Log.Debug($"Disabling effects in {selectedDuration} seconds...");
+        //    Timing.CallDelayed(selectedDuration, () =>
+        //    {
+        //        Log.Debug($"Disabling effect: {selectedEffect} on player: {ev.Player.Nickname}");
+        //        ev.Player.DisableEffect(selectedEffect);
+        //    });
+        //}
 
         ev.Player.RemoveItem(ev.Player.CurrentItem);
-    }
-
-    public void OnVoiceChatting(VoiceChattingEventArgs ev)
-    {
-        // TODO: It'd be funny to add a Helium soda that just makes your voice high pitched lol
-
-        //if (!ev.Player.GameObject.TryGetComponent(out Scp559SizeEffect _))
-        //    return;
-        //ev.VoiceMessage = VoicePitchUtilities.SetVoicePitch(ev.VoiceMessage);
-    }
-
-    public void OnDying(DyingEventArgs ev)
-    {
-        // TODO: Use this example for adding custom new sodas
-
-        //if (!ev.Player.GameObject.TryGetComponent(out Scp559SizeEffect scp559Effect))
-        //    return;
-
-        //Object.Destroy(scp559Effect);
-        //ev.Player.Scale = Vector3.one;
     }
 }

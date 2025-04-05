@@ -9,12 +9,16 @@ using MapEditorReborn.API.Features.Objects;
 using UnityEngine;
 using VendingMachine.Drinks;
 using System.Reflection;
-using InventorySystem.Items.Usables;
 
 namespace VendingMachine;
 
 public class Scp294
 {
+    public Scp294()
+    {
+        Log.Debug("Scp294 CONSTRUCTED");
+    }
+
     private MapEditorObject model;
 
     public Vector3 WorldPosition { get; private set; } = Vector3.zero;
@@ -92,7 +96,7 @@ public class Scp294
             if (success)
             {
                 // TODO: use other Give() method for scp207 and antiscp207
-                Log.Debug($"Giving random drink: {randomDrink.Name} to player: {player.Nickname}");
+                Log.Info($"Dispensing random drink: {randomDrink.Name} to player: {player.Nickname}");
                 randomDrink.Give(player);
                 DrawerCount--;
             }
@@ -107,7 +111,7 @@ public class Scp294
         }
     }
 
-    public void OnRoundStart()
+    public void OnRoundStarted()
     {
         Log.Debug("Round started: spawning vending machine");
 
@@ -155,20 +159,19 @@ public class Scp294
         Log.Error($"No valid rooms after {maxTries} tries, aborting spawn");
     }
 
-    public void OnEndingRound(EndingRoundEventArgs ev)
+    public void OnRoundEnded(RoundEndedEventArgs ev)
     {
+        Log.Debug("Round ended");
         model?.Destroy();
         model = null;
     }
 
     private bool GetRandomDrink(out CustomDrink outDrink)
     {
-        //out Consumable outConsumable
         int roll = Utils.RollChanceFromConfig(MainPlugin.Configs);
         Log.Debug($"GetRandomDrink(): rolled: {roll}");
 
         outDrink = null;
-        //outConsumable = null;
         foreach (PropertyInfo pInfo in MainPlugin.Configs.GetType().GetProperties())
         {
             if (typeof(CustomDrink).IsAssignableFrom(pInfo.PropertyType))
@@ -189,10 +192,6 @@ public class Scp294
                     }
                 }
             }
-            //else if (pInfo.PropertyType == typeof(Scp207) || pInfo.PropertyType == typeof(AntiScp207))
-            //{
-            //    var drink = 
-            //}
         }
         return false;
     }
