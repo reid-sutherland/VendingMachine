@@ -8,13 +8,13 @@ namespace VendingMachine.Utils;
 
 public static class RollHelper
 {
-    public static int RollChance(IDictionary<string, CustomDrink> chances)
+    public static int RollChanceFromCollection(IEnumerable<int> chances)
     {
         double rolledChance = MainPlugin.Random.NextDouble();
 
         if (MainPlugin.Configs.AdditiveProbabilities)
         {
-            rolledChance *= chances.Sum(kvp => kvp.Value.Chance);
+            rolledChance *= chances.Sum();
         }
         else
         {

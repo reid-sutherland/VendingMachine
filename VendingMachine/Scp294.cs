@@ -8,6 +8,7 @@ using MapEditorReborn.API.Features;
 using MapEditorReborn.API.Features.Objects;
 using UnityEngine;
 using VendingMachine.Drinks;
+using VendingMachine.Utils;
 using System.Reflection;
 
 namespace VendingMachine;
@@ -168,7 +169,7 @@ public class Scp294
 
     private bool GetRandomDrink(out CustomDrink outDrink)
     {
-        int roll = Utils.RollChanceFromConfig(MainPlugin.Configs);
+        int roll = RollHelper.RollChanceFromConfig(MainPlugin.Configs);
         Log.Debug($"GetRandomDrink(): rolled: {roll}");
 
         outDrink = null;
