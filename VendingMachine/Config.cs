@@ -27,12 +27,18 @@ public sealed class Config : IConfig
     // It's too difficult to make a list of drinks since CustomDrink can't be instantiated
     // So define them individually here
 
-    [Description("A regular SCP-207")]
+    [Description("A regular SCP-207.")]
     public Scp207 Scp207 { get; set; } = new();
 
-    [Description("A regular AntiSCP-207")]
+    [Description("A regular AntiSCP-207.")]
     public AntiScp207 AntiScp207 { get; set; } = new();
 
     [Description("Gobby-Pop. Makes gobby blind. Configurable effect for others.")]
     public GobbyPop GobbyPop { get; set; } = new();
+
+    [Description("Helium Hatch. Makes your voice high-pitched.")]
+    public HeliumHatch HeliumHatch { get; set; } = new();
+
+    [Description("Poopsi. Causes extreme diarrhea.")]
+    public Poopsi Poopsi { get; set; } = new();
 }

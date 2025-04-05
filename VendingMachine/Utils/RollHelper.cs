@@ -3,11 +3,10 @@ using System.Linq;
 using System.Reflection;
 using System.Collections.Generic;
 using VendingMachine.Drinks;
-using Exiled.API.Features;
 
-namespace VendingMachine;
+namespace VendingMachine.Utils;
 
-public static class Utils
+public static class RollHelper
 {
     public static int RollChance(IDictionary<string, CustomDrink> chances)
     {

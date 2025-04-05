@@ -57,25 +57,14 @@ public class GobbyPop : CustomDrink
         if (ev.Player.UserId == "76561198076399181@steam")
         {
             // the gobby effect is reserved for gobby-equivalents
-            Log.Debug($"Enabling effect: {EffectType.Blinded} on gobby: {ev.Player.Nickname}");
+            Log.Info($"Enabling effect: {EffectType.Blinded} on gobby: {ev.Player.Nickname}");
             ev.Player.EnableEffect(EffectType.Blinded, 255, 0.0f, addDurationIfActive: true);
         }
         else
         {
-            Log.Debug($"Enabling effect: {Effect} on player: {ev.Player.Nickname}");
+            Log.Info($"Enabling effect: {Effect} on player: {ev.Player.Nickname}");
             ev.Player.EnableEffect(Effect, Duration);
         }
-
-        //if (selectedDuration > 0)
-        //{
-        //    Log.Debug($"Disabling effects in {selectedDuration} seconds...");
-        //    Timing.CallDelayed(selectedDuration, () =>
-        //    {
-        //        Log.Debug($"Disabling effect: {selectedEffect} on player: {ev.Player.Nickname}");
-        //        ev.Player.DisableEffect(selectedEffect);
-        //    });
-        //}
-
         ev.Player.RemoveItem(ev.Player.CurrentItem);
     }
 }
