@@ -64,9 +64,9 @@ public class RandomRootbeer : CustomDrink
             Log.Debug($"-- current roll: {roll} - current chance: {chance} for effect: {effect}");
             if (roll <= chance)
             {
-                // TODO: We should maybe show a hint here saying what they got (to prevent 'broken plugin' bitching)
-                ev.Player.EnableEffect(effect, 128, Duration, addDurationIfActive: true);
+                ev.Player.EnableEffect(effect, 200, Duration, addDurationIfActive: true);
                 Log.Info($"Enabling random {Name} effect: {effect} on player: {ev.Player.Nickname} for {Duration} seconds");
+                ev.Player.ShowHint($"You got the {effect} effect!", 5.0f);
                 break;
             }
 
