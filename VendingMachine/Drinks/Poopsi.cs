@@ -28,7 +28,7 @@ public class Poopsi : CustomDrink
     [Description("How long the effect lasts for. A value of 0 means infinite.")]
     public float Duration { get; set; } = 90.0f;
 
-    [Description("How much artificial health the player gets when pooping")]
+    [Description("How much artificial health the player gets when pooping.")]
     public float TantrumArtificialHealth { get; set; } = 25.0f;
 
     [Description("How many seconds between poops")]

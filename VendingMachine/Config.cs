@@ -42,6 +42,9 @@ public sealed class Config : IConfig
     [Description("Old Man Rye. Makes you ghostly (walk through doors) like old man.")]
     public OldManRye OldManRye { get; set; } = new();
 
-    [Description("Random Rootbeer. Gives a random effect from the config list.")]
+    [Description("Random Rootbeer. Gives you a random effect from the config list.")]
     public RandomRootbeer RandomRootbeer { get; set; } = new();
+
+    [Description("McDonald's Sprite. Gives you hypothermia.")]
+    public McDonaldsSprite McDonaldsSprite { get; set; } = new();
 }
