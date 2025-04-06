@@ -3,13 +3,10 @@ using System.IO;
 using AdvancedMERTools;
 using Exiled.API.Enums;
 using Exiled.API.Features;
-using Exiled.CustomItems.API;
 using Exiled.CustomItems.API.Features;
 using MEC;
 using UnityEngine;
-using UnityEngine.Rendering;
 using UserSettings.ServerSpecific;
-using VendingMachine.Drinks;
 using Random = System.Random;
 
 namespace VendingMachine;
@@ -61,6 +58,7 @@ public class MainPlugin : Plugin<Config>
             try
             {
                 CustomItem.RegisterItems(overrideClass: Configs);
+                Log.Info("All custom items registered successfully");
             }
             catch (Exception ex)
             {

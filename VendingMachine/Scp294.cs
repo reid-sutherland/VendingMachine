@@ -1,17 +1,16 @@
 ﻿using System;
 using System.Linq;
+using System.Reflection;
 using System.Collections.Generic;
 using Exiled.API.Enums;
 using Exiled.API.Features;
 using Exiled.Events.EventArgs.Server;
 using MapEditorReborn.API.Features;
 using MapEditorReborn.API.Features.Objects;
+using MEC;
 using UnityEngine;
 using VendingMachine.Drinks;
 using VendingMachine.Utils;
-using System.Reflection;
-using System.IO;
-using MEC;
 
 namespace VendingMachine;
 
@@ -166,7 +165,6 @@ public class Scp294
             bool success = GetRandomDrink(out CustomDrink randomDrink);
             if (success)
             {
-                // TODO: use other Give() method for scp207 and antiscp207
                 Log.Info($"Dispensing random drink: {randomDrink.Name} to player: {player.Nickname}");
                 randomDrink.Give(player);
                 DrawerCount--;
@@ -223,7 +221,7 @@ public class Scp294
 
     // TODO: Move this to Config.SpawnPoints
     // Tuple values are <offset, rotation> where rotation is the euler angles of the Quaternion
-    public static readonly Dictionary<RoomType, Tuple<Vector3, Vector3>> SpawnPoints = new()
+    private static readonly Dictionary<RoomType, Tuple<Vector3, Vector3>> SpawnPoints = new()
     {
         //[RoomType.EzCurve] = Tuple.Create(new Vector3(0.894f, 0.565f, 1.638f), new Vector3(0.0f, 225.0f, 0.0f)),    // this works when room rotation is (0, 0, 0, -1)
         [RoomType.EzIntercom] = Tuple.Create(new Vector3(-0.176f, 0.547f, -4.437f), new Vector3(0.0f, -90.0f, 0.0f)),

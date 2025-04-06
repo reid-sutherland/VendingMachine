@@ -25,7 +25,7 @@ public class OldManRye : CustomDrink
     public override float Weight { get; set; } = 1.0f;
 
     [Description("How long the effect lasts for. A value of 0 means infinite.")]
-    public float Duration { get; set; } = 90.0f;
+    public float Duration { get; set; } = 120.0f;
 
     protected override void SubscribeEvents()
     {
@@ -47,11 +47,12 @@ public class OldManRye : CustomDrink
         {
             return;
         }
-        Log.Debug($"{ev.Player.Nickname} used a custom item: {ev.Item}");
-        ev.Player.DisableEffect(EffectType.AntiScp207);
+        ev.Player.DisableEffect(EffectType.Scp207);
+        Log.Debug($"{ev.Player.Nickname} used a custom item: {Name}");
 
-        Log.Info($"Enabling OldManRye effect on player: {ev.Player.Nickname} for {Duration} seconds");
-        ev.Player.EnableEffect(EffectType.Ghostly, Duration);
+        ev.Player.EnableEffect(EffectType.Ghostly, 255, Duration);
+        Log.Info($"Enabling {Name} effect on player: {ev.Player.Nickname} for {Duration} seconds");
+
         ev.Player.RemoveItem(ev.Player.CurrentItem);
     }
 }

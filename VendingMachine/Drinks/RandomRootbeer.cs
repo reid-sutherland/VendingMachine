@@ -1,6 +1,5 @@
 ﻿using System.Collections.Generic;
 using System.ComponentModel;
-using AdvancedMERTools;
 using Exiled.API.Enums;
 using Exiled.API.Features;
 using Exiled.API.Features.Attributes;
@@ -28,7 +27,7 @@ public class RandomRootbeer : CustomDrink
     public override float Weight { get; set; } = 1.0f;
 
     [Description("How long the effect lasts for. A value of 0 means infinite.")]
-    public float Duration { get; set; } = 90.0f;
+    public float Duration { get; set; } = 60.0f;
 
     [Description("A list of possible effects and their additive chances.")]
     public Dictionary<EffectType, int> EffectChances { get; private set; } = new();
@@ -53,12 +52,11 @@ public class RandomRootbeer : CustomDrink
         {
             return;
         }
-        Log.Debug($"{ev.Player.Nickname} used a custom item: {ev.Item}");
-        ev.Player.DisableEffect(EffectType.AntiScp207);
+        ev.Player.DisableEffect(EffectType.Scp207);
+        Log.Debug($"{ev.Player.Nickname} used a custom item: {Name}");
 
         int roll = RollHelper.RollChanceFromCollection(EffectChances.Values);
         Log.Debug($"RandomRootbeer: rolled: {roll}");
-
         foreach (var kvp in EffectChances)
         {
             EffectType effect = kvp.Key;
@@ -66,10 +64,10 @@ public class RandomRootbeer : CustomDrink
             Log.Debug($"-- current roll: {roll} - current chance: {chance} for effect: {effect}");
             if (roll <= chance)
             {
-                Log.Info($"Enabling random effect: {effect} on player: {ev.Player.Nickname} for {Duration} seconds");
-                ev.Player.EnableEffect(effect, 255, Duration);
-                ev.Player.RemoveItem(ev.Player.CurrentItem);
-                return;
+                // TODO: We should maybe show a hint here saying what they got (to prevent 'broken plugin' bitching)
+                ev.Player.EnableEffect(effect, 128, Duration, addDurationIfActive: true);
+                Log.Info($"Enabling random {Name} effect: {effect} on player: {ev.Player.Nickname} for {Duration} seconds");
+                break;
             }
 
             if (MainPlugin.Configs.AdditiveProbabilities)

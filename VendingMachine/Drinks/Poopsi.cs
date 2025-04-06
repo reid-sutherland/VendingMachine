@@ -4,11 +4,9 @@ using Exiled.API.Features;
 using Exiled.API.Features.Attributes;
 using Exiled.CustomItems.API.Features;
 using Exiled.Events.EventArgs.Player;
-using Exiled.Events.EventArgs.Scp173;
 using MEC;
 using YamlDotNet.Serialization;
 using Player = Exiled.Events.Handlers.Player;
-using Scp173 = Exiled.Events.Handlers.Scp173;
 
 namespace VendingMachine.Drinks;
 
@@ -28,13 +26,13 @@ public class Poopsi : CustomDrink
     public override float Weight { get; set; } = 1.0f;
 
     [Description("How long the effect lasts for. A value of 0 means infinite.")]
-    public float Duration { get; set; } = 120.0f;
+    public float Duration { get; set; } = 90.0f;
 
     [Description("How much artificial health the player gets when pooping")]
-    public float TantrumArtificialHealth { get; set; } = 5.0f;
+    public float TantrumArtificialHealth { get; set; } = 25.0f;
 
     [Description("How many seconds between poops")]
-    public float TantrumInterval { get; set; } = 5.0f;
+    public float TantrumInterval { get; set; } = 10.0f;
 
     private bool TantrumActive { get; set; } = false;
 
@@ -62,24 +60,22 @@ public class Poopsi : CustomDrink
         {
             return;
         }
-        Log.Debug($"{ev.Player.Nickname} used a custom item: {ev.Player.CurrentItem}");
         ev.Player.DisableEffect(EffectType.Scp207);
+        Log.Debug($"{ev.Player.Nickname} used a custom item: {Name}");
 
         AffectedUserId = ev.Player.UserId;
         TantrumActive = true;
-        Log.Info($"Enabling Poopsi effect on player: {ev.Player.Nickname} for {Duration} seconds");
         PlaceTantrum(ev.Player);
-
+        Log.Info($"Enabling {Name} effect on player: {ev.Player.Nickname} for {Duration} seconds");
         if (Duration > 0)
         {
-            Log.Debug($"Disabling Poopsi effect in {Duration} seconds...");
             Timing.CallDelayed(Duration, () =>
             {
-                Log.Debug($"Disabling Poopsi effect on player: {ev.Player.Nickname}");
+                AffectedUserId = "";
                 TantrumActive = false;
+                Log.Debug($"Disabling {Name} effect on player: {ev.Player.Nickname}");
             });
         }
-
         ev.Player.RemoveItem(ev.Player.CurrentItem);
     }
 
@@ -87,8 +83,9 @@ public class Poopsi : CustomDrink
     {
         if (!string.IsNullOrEmpty(AffectedUserId) && ev.Player.UserId == AffectedUserId)
         {
-            Log.Debug($"Affected player {ev.Player.UserId} died - removing Poopsi effect");
+            AffectedUserId = "";
             TantrumActive = false;
+            Log.Debug($"Affected player {ev.Player.UserId} died - removing {Name} effect");
         }
     }
 
