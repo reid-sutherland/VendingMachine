@@ -19,8 +19,9 @@ public class Scp294
 {
     public Scp294()
     {
-        LoadAudioClip();
-        Log.Debug("Scp294 CONSTRUCTED");
+        Log.Debug($"Loading audio clips from directory: {AudioHelper.AudioPath}");
+        AudioHelper.LoadAudioClip(audioDispenseEffect);
+        AudioHelper.LoadAudioClips(audioAmbient);
     }
 
     private MapEditorObject model;
@@ -37,90 +38,12 @@ public class Scp294
 
     public int DrawerCount { get; private set; } = 0;
 
-    private readonly string[] audioAmbient = { "song1.ogg", "song2.ogg", "song3.ogg" };
-    private readonly string[] audioEffects = { "DispenseDrink.ogg" };
+    public string AudioPlayerName => GetType().Name;
 
-    private CoroutineHandle handle;
+    private readonly string audioDispenseEffect = "DispenseDrink.ogg";
+    private readonly List<string> audioAmbient = new() { "song1.ogg", "song2.ogg", "song3.ogg" };
 
-    public void OnControlPanelInteracted(Player player)
-    {
-        if (model is null)
-        {
-            return;
-        }
-
-        try
-        {
-            Log.Debug($"Player {player.Nickname} interacted with the vending machine control panel");
-            if (player.IsScp)
-            {
-                Log.Debug("Player was SCP");
-                return;
-            }
-            if (player.CurrentItem is null || player.CurrentItem.Type != ItemType.Coin)
-            {
-                Log.Debug($"Player was NOT holding a coin");
-                return;
-            }
-
-            player.RemoveItem(player.CurrentItem);
-            DrawerCount++;
-
-            PlayAudioClip("DispenseDrink");
-        }
-        catch (Exception ex)
-        {
-            Log.Error($"Oh fuck there's an exception: {ex}");
-        }
-    }
-
-    public void OnDrawerInteracted(Player player)
-    {
-        if (model is null)
-        {
-            return;
-        }
-
-        try
-        {
-            Log.Debug($"Player interacted with the vending machine drawer");
-            if (player.IsScp)
-            {
-                Log.Debug("Player was SCP");
-                return;
-            }
-            if (DrawerCount == 0)
-            {
-                Log.Debug("Drawer is empty");
-                return;
-            }
-            if (player.IsInventoryFull)
-            {
-                Log.Debug("Player's inventory is full");
-                return;
-            }
-
-            // TODO: Add some sounds
-
-            Log.Debug($"{DrawerCount} drinks in the drawer, dispensing");
-            bool success = GetRandomDrink(out CustomDrink randomDrink);
-            if (success)
-            {
-                // TODO: use other Give() method for scp207 and antiscp207
-                Log.Info($"Dispensing random drink: {randomDrink.Name} to player: {player.Nickname}");
-                randomDrink.Give(player);
-                DrawerCount--;
-            }
-            else
-            {
-                Log.Error("Failed to get random drink :(");
-            }
-        }
-        catch (Exception ex)
-        {
-            Log.Error($"Oh fuck there's an exception: {ex}");
-        }
-    }
+    private CoroutineHandle coroutineHandle;
 
     public void OnRoundStarted()
     {
@@ -155,8 +78,8 @@ public class Scp294
                     Log.Debug($"-- room position: {room.Position} - room euler rotation: {room.Rotation.eulerAngles}");
                     Log.Debug($"-- model position: {model.Position} - model euler rotation: {model.Rotation.eulerAngles}");
 
-
-                    handle = Timing.RunCoroutine(AmbientAudioCoroutine());
+                    // Play ambient music indefinitely
+                    coroutineHandle = Timing.RunCoroutine(AmbientAudioCoroutine());
                 }
                 else
                 {
@@ -176,9 +99,89 @@ public class Scp294
     public void OnRoundEnded(RoundEndedEventArgs ev)
     {
         Log.Debug("Round ended");
-        Timing.KillCoroutines(handle);
+        Timing.KillCoroutines(coroutineHandle);
         model?.Destroy();
         model = null;
+    }
+
+    public void OnControlPanelInteracted(Player player)
+    {
+        if (model is null)
+        {
+            return;
+        }
+
+        try
+        {
+            Log.Debug($"Player {player.Nickname} interacted with the vending machine control panel");
+            if (player.IsScp)
+            {
+                Log.Debug("Player was SCP");
+                return;
+            }
+            if (player.CurrentItem is null || player.CurrentItem.Type != ItemType.Coin)
+            {
+                Log.Debug($"Player was NOT holding a coin");
+                return;
+            }
+
+            player.RemoveItem(player.CurrentItem);
+            DrawerCount++;
+
+            AudioHelper.PlayAudioClip(AudioPlayerName, audioDispenseEffect, model);
+        }
+        catch (Exception ex)
+        {
+            Log.Error($"Oh fuck there's an exception: {ex}");
+        }
+    }
+
+    public void OnDrawerInteracted(Player player)
+    {
+        if (model is null)
+        {
+            return;
+        }
+
+        try
+        {
+            Log.Debug($"Player interacted with the vending machine drawer");
+            if (player.IsScp)
+            {
+                Log.Debug("Player was SCP");
+                return;
+            }
+            if (DrawerCount == 0)
+            {
+                Log.Debug("Drawer is empty");
+                return;
+            }
+            if (player.IsInventoryFull)
+            {
+                Log.Debug("Player's inventory is full");
+                return;
+            }
+
+            Log.Debug($"{DrawerCount} drinks in the drawer, dispensing");
+            bool success = GetRandomDrink(out CustomDrink randomDrink);
+            if (success)
+            {
+                // TODO: use other Give() method for scp207 and antiscp207
+                Log.Info($"Dispensing random drink: {randomDrink.Name} to player: {player.Nickname}");
+                randomDrink.Give(player);
+                DrawerCount--;
+
+                // TODO: Play a sound for the drawer
+            }
+            else
+            {
+                Log.Error("Failed to get random drink :(");
+            }
+        }
+        catch (Exception ex)
+        {
+            Log.Error($"Oh fuck there's an exception: {ex}");
+        }
     }
 
     private bool GetRandomDrink(out CustomDrink outDrink)
@@ -235,60 +238,19 @@ public class Scp294
         //[RoomType.EzGateA] = Tuple.Create(new Vector3(2.834f, 0.553f, -3.926f), Quaternion.Euler(0.0f, 90f, 0.0f)),
         //[RoomType.EzGateB] = new Vector3(0.0f, 0.0f, 0.0f),
     };
+
     private IEnumerator<float> AmbientAudioCoroutine()
     {
-        System.Random rnd = new System.Random();
-        for (; ; ) //repeat the following infinitely
+        for (;;)
         {
-            int rand = rnd.Next(0, audioAmbient.Length);
-            Log.Debug($"Playing audio {audioAmbient[rand]}");
+            int rand = MainPlugin.Random.Next(audioAmbient.Count);
+            string clip = audioAmbient[rand];
+            AudioHelper.PlayAudioClip(AudioPlayerName, clip, model);
 
-            PlayAudioClip(audioAmbient[rand].Replace(".ogg", ""));
-
-            int waitTime = rnd.Next(120, 240);
-            Log.Debug($"Waiting {waitTime} seconds before playing ambient audio");
-            yield return Timing.WaitForSeconds((float)waitTime);
+            // Note: Each song is currently about 30s
+            int waitTime = MainPlugin.Random.Next(60, 120);
+            Log.Debug($"Waiting {waitTime} seconds before playing next ambient audio");
+            yield return Timing.WaitForSeconds(waitTime);
         }
-    }
-
-    private void LoadAudioClip()
-    {
-        foreach (string clip in audioEffects)
-        {
-            Log.Debug($"{clip.Replace(".ogg", "")}");
-            if (!AudioClipStorage.LoadClip(MainPlugin.Singleton.AudioPath + clip, clip.Replace(".ogg", "")))
-            {
-                Log.Error($"Failed to load clip: {MainPlugin.Singleton.AudioPath}{clip}");
-            }
-        }
-
-        foreach (string clip in audioAmbient)
-        {
-            Log.Debug($"{clip.Replace(".ogg", "")}");
-            if (!AudioClipStorage.LoadClip(MainPlugin.Singleton.AudioPath + clip, clip.Replace(".ogg", "")))
-            {
-                Log.Error($"Failed to load clip: {MainPlugin.Singleton.AudioPath}{clip}");
-            }
-        }
-    }
-    private void PlayAudioClip(string clip)
-    {
-        AudioPlayer audioPlayer = AudioPlayer.CreateOrGet(this.GetType().Name, onIntialCreation: (p) =>
-        {
-            // Attach created audio player to player.
-            p.transform.parent = model.transform;
-
-            // This created speaker will be in 3D space.
-            Speaker speaker = p.AddSpeaker("Main", isSpatial: true, minDistance: 1f, maxDistance: 15f);
-
-            // Attach created speaker to player.
-            speaker.transform.parent = model.transform;
-
-            // Set local positino to zero to make sure that speaker is in player.
-            speaker.transform.localPosition = Vector3.zero;
-        });
-        Log.Debug($"Transform {model.transform.position}");
-
-        audioPlayer.AddClip(clip);
     }
 }

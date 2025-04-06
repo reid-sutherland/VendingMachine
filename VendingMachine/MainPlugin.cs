@@ -34,15 +34,12 @@ public class MainPlugin : Plugin<Config>
 
     public Scp294 Scp294 { get; private set; }
 
-    public readonly string AudioPath = Path.Combine(Paths.Plugins, "audio\\SCP294\\");
-
     public static Random Random { get; private set; }
 
     public const int EVALUE = 101;
 
     public override void OnEnabled()
     {
-        Log.Error(AudioPath);
         if (!File.Exists(Path.Combine(Paths.Plugins, "MapEditorReborn.dll")))
         {
             Log.Error("MapEditorReborn is missing!, aborting plugin startup.");
@@ -117,49 +114,4 @@ public class MainPlugin : Plugin<Config>
             }
         }
     }
-
-    public void PlaySound()
-    {
-        //public string AudioName;
-        //[Header("0: Loop")]
-        //public int PlayCount;
-        //public bool IsSpatial;
-        //public float MaxDistance;
-        //public float MinDistance;
-        //public float Volume;
-        //public SVector3 LocalPlayPosition;
-        //public AudioPlayer AP;
-        //bool loaded;
-
-        //MEC.Timing.CallDelayed(1.0f, () =>
-        //{
-        //    loaded = false;
-        //    if (!loaded)
-        //    {
-        //        if (!Directory.Exists(Configs.AudioFolderPath))
-        //        {
-        //            ServerConsole.AddLog("Cannot find Audio Folder Directory!", ConsoleColor.Red);
-        //            return;
-        //        }
-        //        if (!AudioClipStorage.AudioClips.ContainsKey(AudioName))
-        //            AudioClipStorage.LoadClip(Path.Combine(AdvancedMERTools.Singleton.Config.AudioFolderPath, AudioName), AudioName);
-        //        loaded = true;
-        //    }
-
-        //    if (AP == null)
-        //    {
-        //        AP = AudioPlayer.Create($"AudioHandler-{args.transform.GetHashCode()}-{GetHashCode()}");
-        //        Speaker speaker = AP.AddSpeaker("Primary", args.transform.TransformPoint(LocalPlayPosition), Volume, IsSpatial, MinDistance, MaxDistance);
-        //        AP.transform.parent = speaker.transform.parent = args.transform;
-        //        AP.transform.localPosition = speaker.transform.localPosition = LocalPlayPosition;
-        //        //ServerConsole.AddLog(speaker.transform.position.ToPreciseString());
-        //    }
-        //    if (PlayCount == 0)
-        //        AP.AddClip(AudioName, Volume, true, false);
-        //    for (int i = 0; i < PlayCount; i++)
-        //        AP.AddClip(AudioName, Volume, false, false);
-        //});
-    }
-
-    //private static void OnWaitingForPlayers() => StartupChecks.UnRegisterIncompatibilities();
 }
