@@ -1,14 +1,15 @@
-﻿using System;
-using System.Linq;
-using System.Reflection;
-using System.Collections.Generic;
-using Exiled.API.Enums;
+﻿using Exiled.API.Enums;
 using Exiled.API.Features;
 using Exiled.Events.EventArgs.Server;
 using MapEditorReborn.API.Features;
 using MapEditorReborn.API.Features.Objects;
 using MEC;
+using System;
+using System.Collections.Generic;
+using System.Linq;
+using System.Reflection;
 using UnityEngine;
+
 using VendingMachine.Drinks;
 using VendingMachine.Utils;
 
@@ -18,7 +19,7 @@ public class Scp294
 {
     public Scp294()
     {
-        Log.Debug($"Loading audio clips from directory: {AudioHelper.AudioPath}");
+        Log.Info($"Loading audio clips from directory: {AudioHelper.AudioPath}");
         AudioHelper.LoadAudioClip(audioDispenseEffect);
         AudioHelper.LoadAudioClips(audioAmbient);
     }
@@ -162,11 +163,9 @@ public class Scp294
             }
 
             Log.Debug($"{DrawerCount} drinks in the drawer, dispensing");
-            bool success = GetRandomDrink(out CustomDrink randomDrink);
+            bool success = GiveRandomDrink(player);
             if (success)
             {
-                Log.Info($"Dispensing random drink: {randomDrink.Name} to player: {player.Nickname}");
-                randomDrink.Give(player);
                 DrawerCount--;
 
                 // TODO: Play a sound for the drawer
@@ -182,12 +181,11 @@ public class Scp294
         }
     }
 
-    private bool GetRandomDrink(out CustomDrink outDrink)
+    private bool GiveRandomDrink(Player player)
     {
         int roll = RollHelper.RollChanceFromConfig(MainPlugin.Configs);
         Log.Debug($"GetRandomDrink(): rolled: {roll}");
 
-        outDrink = null;
         foreach (PropertyInfo pInfo in MainPlugin.Configs.GetType().GetProperties())
         {
             if (typeof(CustomDrink).IsAssignableFrom(pInfo.PropertyType))
@@ -198,7 +196,10 @@ public class Scp294
                     Log.Debug($"-- current roll: {roll} - current chance: {drink.Chance} for drink: {drink.Name}");
                     if (roll <= drink.Chance)
                     {
-                        outDrink = drink;
+                        CustomDrink randomDrink = drink;
+                        Log.Info($"Dispensing random drink: {randomDrink.Name} to player: {player.Nickname}");
+                        randomDrink.Give(player);
+
                         return true;
                     }
 
@@ -247,7 +248,10 @@ public class Scp294
 
             // Note: Each song is currently about 30s
             int waitTime = MainPlugin.Random.Next(60, 120);
-            Log.Debug($"Waiting {waitTime} seconds before playing next ambient audio");
+            if (MainPlugin.Configs.AudioDebug)
+            {
+                Log.Debug($"Waiting {waitTime} seconds before playing next ambient audio");
+            }
             yield return Timing.WaitForSeconds(waitTime);
         }
     }

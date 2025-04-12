@@ -1,11 +1,12 @@
-﻿using System.ComponentModel;
-using Exiled.API.Enums;
+﻿using Exiled.API.Enums;
 using Exiled.API.Features;
 using Exiled.API.Features.Attributes;
 using Exiled.CustomItems.API.Features;
 using Exiled.Events.EventArgs.Player;
-using InventorySystem.Items.Usables.Scp244.Hypothermia;
 using MEC;
+using System.Collections.Generic;
+using System.ComponentModel;
+using System.Linq;
 using YamlDotNet.Serialization;
 using Player = Exiled.Events.Handlers.Player;
 
@@ -26,7 +27,7 @@ public class McDonaldsSprite : CustomDrink
     [YamlIgnore]
     public override float Weight { get; set; } = 1.0f;
 
-    [Description("How long the effect lasts for. A value of 0 means infinite.")]
+    [Description("How long the drink's effects lasts for. A value of 0 means infinite.")]
     public float Duration { get; set; } = 30.0f;
 
     [Description("How much health the player gets every 5 seconds of Hypothermia.")]
@@ -39,8 +40,6 @@ public class McDonaldsSprite : CustomDrink
     public float HealthIncrement { get; set; } = 10.0f;
 
     private float CurrentHealthGiven { get; set; }
-
-    private string AffectedUserId { get; set; } = "";
 
     protected override void SubscribeEvents()
     {
@@ -60,12 +59,25 @@ public class McDonaldsSprite : CustomDrink
 
     private void OnItemUsed(UsedItemEventArgs ev)
     {
+        // Disable effect when SCP-500 (red pill) is used
+        if (ev.Item.Type == ItemType.SCP500)
+        {
+            Disable(ev.Player, usedScp500: true);
+            return;
+        }
+
         if (!Check(ev.Item))
         {
             return;
         }
         ev.Player.DisableEffect(EffectType.AntiScp207);
         Log.Debug($"{ev.Player.Nickname} used a custom item: {Name}");
+
+        if (AffectedUserIds.ContainsKey(ev.Player.UserId))
+        {
+            Log.Debug($"{ev.Player.Nickname} is already under the affects of {Name}: ignoring");
+            return;
+        }
 
         // Give them artificial health on an interval so they don't die from the hypothermia
         if (Duration <= 0.0f)
@@ -75,42 +87,51 @@ public class McDonaldsSprite : CustomDrink
         }
         CurrentHealthGiven = HealthGiven;
 
-        AffectedUserId = ev.Player.UserId;
+        AffectedUserIds.Add(ev.Player.UserId, true);
         ev.Player.EnableEffect(EffectType.Hypothermia, 255, Duration);
         Log.Info($"Enabling {Name} effect on player: {ev.Player.Nickname} for {Duration} seconds");
         GiveHealth(ev.Player);
-        Timing.CallDelayed(Duration, () =>
+        if (Duration > 0)
         {
-            AffectedUserId = "";
-            ev.Player.DisableEffect(EffectType.Hypothermia);
-            Log.Debug($"Disabling {Name} effect on player: {ev.Player.Nickname}");
-        });
+            Timing.CallDelayed(Duration, () =>
+            {
+                Disable(ev.Player, expired: true);
+            });
+        }
 
         ev.Player.RemoveItem(ev.Player.CurrentItem);
     }
 
     public void OnDying(DyingEventArgs ev)
     {
-        if (!string.IsNullOrEmpty(AffectedUserId) && ev.Player.UserId == AffectedUserId)
-        {
-            AffectedUserId = "";
-            ev.Player.DisableEffect(EffectType.Hypothermia);
-            Log.Debug($"Affected player {ev.Player.UserId} died - removing {Name} effect");
-        }
+        Disable(ev.Player, died: true);
     }
 
     private void GiveHealth(Exiled.API.Features.Player player)
     {
-        Log.Debug($"Giving {CurrentHealthGiven} health to player: {player.UserId} - affected: {AffectedUserId}");
-        if (!string.IsNullOrEmpty(AffectedUserId) && player.UserId == AffectedUserId)
+        var affectedUserStatus = AffectedUserIds.Where(kvp => kvp.Key == player.UserId).FirstOrDefault();
+        if (affectedUserStatus.Key != null)
         {
-            // Note: HumeShield stat cannot be seen by player but it works well
-            player.HumeShield += CurrentHealthGiven;
-            CurrentHealthGiven += HealthIncrement;
-            Timing.CallDelayed(HealthInterval, () =>
+            if (affectedUserStatus.Value)
             {
-                GiveHealth(player);
-            });
+                // Note: HumeShield stat cannot be seen by player but it works well
+                player.HumeShield += CurrentHealthGiven;
+                CurrentHealthGiven += HealthIncrement;
+                Timing.CallDelayed(HealthInterval, () =>
+                {
+                    GiveHealth(player);
+                });
+            }
+        }
+    }
+
+    protected override void DisableEffects(Exiled.API.Features.Player player)
+    {
+        player.DisableEffect(EffectType.Hypothermia);
+        var affectedUserStatus = AffectedUserIds.Where(kvp => kvp.Key == player.UserId).FirstOrDefault();
+        if (affectedUserStatus.Key != null)
+        {
+            AffectedUserIds[affectedUserStatus.Key] = false;
         }
     }
 }

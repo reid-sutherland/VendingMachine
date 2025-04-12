@@ -1,10 +1,12 @@
-﻿using System.ComponentModel;
-using Exiled.API.Enums;
+﻿using Exiled.API.Enums;
 using Exiled.API.Features;
 using Exiled.API.Features.Attributes;
 using Exiled.CustomItems.API.Features;
 using Exiled.Events.EventArgs.Player;
 using MEC;
+using System.Collections.Generic;
+using System.ComponentModel;
+using System.Linq;
 using YamlDotNet.Serialization;
 using Player = Exiled.Events.Handlers.Player;
 
@@ -25,7 +27,7 @@ public class Poopsi : CustomDrink
     [YamlIgnore]
     public override float Weight { get; set; } = 1.0f;
 
-    [Description("How long the effect lasts for. A value of 0 means infinite.")]
+    [Description("How long the drink's effects lasts for. A value of 0 means infinite.")]
     public float Duration { get; set; } = 90.0f;
 
     [Description("How much artificial health the player gets when pooping.")]
@@ -33,10 +35,6 @@ public class Poopsi : CustomDrink
 
     [Description("How many seconds between poops")]
     public float TantrumInterval { get; set; } = 10.0f;
-
-    private bool TantrumActive { get; set; } = false;
-
-    private string AffectedUserId { get; set; } = "";
 
     protected override void SubscribeEvents()
     {
@@ -56,45 +54,55 @@ public class Poopsi : CustomDrink
 
     private void OnItemUsed(UsedItemEventArgs ev)
     {
+        // Disable effect when SCP-500 (red pill) is used
+        if (ev.Item.Type == ItemType.SCP500)
+        {
+            Disable(ev.Player, usedScp500: true);
+            return;
+        }
+
         if (!Check(ev.Item))
         {
+            Log.Debug($"-- check failed: {ev.Item}");
             return;
         }
         ev.Player.DisableEffect(EffectType.Scp207);
         Log.Debug($"{ev.Player.Nickname} used a custom item: {Name}");
 
-        AffectedUserId = ev.Player.UserId;
-        TantrumActive = true;
+        if (AffectedUserIds.ContainsKey(ev.Player.UserId))
+        {
+            Log.Debug($"{ev.Player.Nickname} is already under the affects of {Name}: ignoring");
+            return;
+        }
+
+        AffectedUserIds.Add(ev.Player.UserId, true);
         PlaceTantrum(ev.Player);
         Log.Info($"Enabling {Name} effect on player: {ev.Player.Nickname} for {Duration} seconds");
+
         if (Duration > 0)
         {
             Timing.CallDelayed(Duration, () =>
             {
-                AffectedUserId = "";
-                TantrumActive = false;
-                Log.Debug($"Disabling {Name} effect on player: {ev.Player.Nickname}");
+                Disable(ev.Player, expired: true);
             });
         }
+
         ev.Player.RemoveItem(ev.Player.CurrentItem);
     }
 
     public void OnDying(DyingEventArgs ev)
     {
-        if (!string.IsNullOrEmpty(AffectedUserId) && ev.Player.UserId == AffectedUserId)
-        {
-            AffectedUserId = "";
-            TantrumActive = false;
-            Log.Debug($"Affected player {ev.Player.UserId} died - removing {Name} effect");
-        }
+        Disable(ev.Player, died: true);
     }
 
     private void PlaceTantrum(Exiled.API.Features.Player player)
     {
-        if (!string.IsNullOrEmpty(AffectedUserId) && player.UserId == AffectedUserId)
+        var affectedUserStatus = AffectedUserIds.Where(kvp => kvp.Key == player.UserId).FirstOrDefault();
+        if (affectedUserStatus.Key != null)
         {
-            if (TantrumActive)
+            if (affectedUserStatus.Value)
             {
+                Log.Debug($"Placing tantrum and adding health for player: {player.Nickname}");
                 player.PlaceTantrum();
                 player.ArtificialHealth += TantrumArtificialHealth;
                 Timing.CallDelayed(TantrumInterval, () =>
@@ -102,6 +110,15 @@ public class Poopsi : CustomDrink
                     PlaceTantrum(player);
                 });
             }
+        }
+    }
+
+    protected override void DisableEffects(Exiled.API.Features.Player player)
+    {
+        var affectedUserStatus = AffectedUserIds.Where(kvp => kvp.Key == player.UserId).FirstOrDefault();
+        if (affectedUserStatus.Key != null)
+        {
+            AffectedUserIds[affectedUserStatus.Key] = false;
         }
     }
 }

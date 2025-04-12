@@ -14,7 +14,10 @@ public static class AudioHelper
     {
         string filepath = Path.Combine(AudioPath, audioFile);
         string name = audioFile.Replace(".ogg", "");
-        Log.Debug($"-- loading audio clip: {name}");
+        if (MainPlugin.Configs.AudioDebug)
+        {
+            Log.Debug($"-- loading audio clip: {name}");
+        }
         if (!AudioClipStorage.LoadClip(filepath, name))
         {
             Log.Error($"Failed to load clip: {filepath}");
@@ -49,7 +52,10 @@ public static class AudioHelper
             speaker.transform.localPosition = Vector3.zero;
         });
 
-        Log.Debug($"Adding clip: {clip} to model audio player at position: {audioPlayer.transform.position}");
+        if (MainPlugin.Configs.AudioDebug)
+        {
+            Log.Debug($"Adding clip: {clip} to model audio player at position: {audioPlayer.transform.position}");
+        }
         audioPlayer.AddClip(clip);
     }
 }

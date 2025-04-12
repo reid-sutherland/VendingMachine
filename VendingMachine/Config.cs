@@ -1,8 +1,9 @@
-using System.Collections.Generic;
-using System.ComponentModel;
 using Exiled.API.Enums;
 using Exiled.API.Interfaces;
+using System.Collections.Generic;
+using System.ComponentModel;
 using UnityEngine;
+
 using VendingMachine.Drinks;
 
 namespace VendingMachine;
@@ -14,12 +15,18 @@ public sealed class Config : IConfig
 
     public bool Debug { get; set; } = false;
 
+    [Description("Whether AudioAPI routines will write logs to debug")]
+    public bool AudioDebug { get; set; } = false;
+
     [Description("Whether or not probabilities should be additive (50 + 50 = 100) or not (50 + 50 = 2 seperate 50% chances)")]
     public bool AdditiveProbabilities { get; set; } = true;
 
     // TODO: This should default to any of the basic 'rooms' (not 'hallways') in Entrance Zone
     [Description("The rooms and positions where the vending machine can spawn.")]
     public Dictionary<RoomType, Vector3> SpawnPoints { get; set; } = new();
+
+    [Description("The chances for each drink to be dispensed.")]
+    public Dictionary<CustomDrink, int> EffectChances { get; private set; } = new();
 
     // It's too difficult to make a list of drinks since CustomDrink can't be instantiated
     // So define them individually here

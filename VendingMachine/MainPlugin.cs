@@ -1,10 +1,10 @@
-using System;
-using System.IO;
 using AdvancedMERTools;
 using Exiled.API.Enums;
 using Exiled.API.Features;
 using Exiled.CustomItems.API.Features;
 using MEC;
+using System;
+using System.IO;
 using UnityEngine;
 using UserSettings.ServerSpecific;
 using Random = System.Random;
@@ -52,6 +52,7 @@ public class MainPlugin : Plugin<Config>
         Exiled.Events.Handlers.Server.RoundEnded += Scp294.OnRoundEnded;
 
         // Register custom items here
+        // Note: delay here is recommended so that all other plugins and components can load first
         Timing.CallDelayed(5f, () =>
         {
             Log.Debug("Registering custom items...");
@@ -73,6 +74,18 @@ public class MainPlugin : Plugin<Config>
     public override void OnDisabled()
     {
         base.OnDisabled();
+
+        Log.Debug("Un-registering custom items...");
+        try
+        {
+            CustomItem.UnregisterItems();
+            Log.Info("All custom items un-registered successfully");
+        }
+        catch (Exception ex)
+        {
+            Log.Error("Some custom items failed to un-register");
+            Log.Debug(ex);
+        }
 
         ServerSpecificSettingsSync.ServerOnSettingValueReceived -= OnSSInput;
         Exiled.Events.Handlers.Server.RoundStarted -= Scp294.OnRoundStarted;
