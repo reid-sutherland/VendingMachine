@@ -2,16 +2,12 @@
 using Exiled.API.Features;
 using Exiled.API.Features.Attributes;
 using Exiled.CustomItems.API.Features;
-using Exiled.Events.EventArgs.Player;
-using MEC;
 using System.Collections.Generic;
 using System.ComponentModel;
+using System.Linq;
 using YamlDotNet.Serialization;
-using Player = Exiled.Events.Handlers.Player;
 
 using VendingMachine.Utils;
-using CustomPlayerEffects;
-using System.Linq;
 
 namespace VendingMachine.Drinks;
 
@@ -31,7 +27,7 @@ public class RandomRootbeer : CustomDrink
     public override float Weight { get; set; } = 1.0f;
 
     [Description("How long the drink's effects lasts for. A value of 0 means infinite.")]
-    public float Duration { get; set; } = 60.0f;
+    public override float Duration { get; set; } = 120.0f;
 
     [Description("A list of possible effects and their additive chances.")]
     public Dictionary<EffectType, int> EffectChances { get; private set; } = new()
@@ -55,44 +51,8 @@ public class RandomRootbeer : CustomDrink
 
     private Dictionary<string, EffectType> AffectedUserEffects { get; set; }
 
-    protected override void SubscribeEvents()
+    protected override void EnableEffects(Player player)
     {
-        Player.UsedItem += OnItemUsed;
-        Player.Dying += OnDying;
-
-        base.SubscribeEvents();
-    }
-
-    protected override void UnsubscribeEvents()
-    {
-        Player.UsedItem -= OnItemUsed;
-        Player.Dying -= OnDying;
-
-        base.UnsubscribeEvents();
-    }
-
-    private void OnItemUsed(UsedItemEventArgs ev)
-    {
-        // Disable effect when SCP-500 (red pill) is used
-        if (ev.Item.Type == ItemType.SCP500)
-        {
-            Disable(ev.Player, usedScp500: true);
-            return;
-        }
-
-        if (!Check(ev.Item))
-        {
-            return;
-        }
-        ev.Player.DisableEffect(EffectType.Scp207);
-        Log.Debug($"{ev.Player.Nickname} used a custom item: {Name}");
-
-        if (AffectedUserIds.ContainsKey(ev.Player.UserId))
-        {
-            Log.Debug($"{ev.Player.Nickname} is already under the affects of {Name}: ignoring");
-            return;
-        }
-
         int roll = RollHelper.RollChanceFromCollection(EffectChances.Values);
         Log.Debug($"RandomRootbeer: rolled: {roll}");
         foreach (var kvp in EffectChances)
@@ -103,18 +63,10 @@ public class RandomRootbeer : CustomDrink
 
             if (roll <= chance)
             {
-                AffectedUserEffects.Add(ev.Player.UserId, effect);
-                AffectedUserIds.Add(ev.Player.UserId, true);
-                ev.Player.EnableEffect(effect, 200, Duration, addDurationIfActive: true);
-                ev.Player.ShowHint($"You got the {effect} effect!", 5.0f);
-                Log.Info($"Enabling random {Name} effect: {effect} on player: {ev.Player.Nickname} for {Duration} seconds");
-                if (Duration > 0)
-                {
-                    Timing.CallDelayed(Duration, () =>
-                    {
-                        Disable(ev.Player, expired: true);
-                    });
-                }
+                AffectedUserEffects.Add(player.UserId, effect);
+                player.EnableEffect(effect, 200, Duration, addDurationIfActive: true);
+                player.ShowHint($"You got the {effect} effect!", 5.0f);
+                Log.Info($"{Name} random effect for player {player.Nickname}: temporary {effect}");
                 break;
             }
 
@@ -123,15 +75,9 @@ public class RandomRootbeer : CustomDrink
                 roll -= chance;
             }
         }
-        ev.Player.RemoveItem(ev.Player.CurrentItem);
     }
 
-    public void OnDying(DyingEventArgs ev)
-    {
-        Disable(ev.Player, died: true);
-    }
-
-    protected override void DisableEffects(Exiled.API.Features.Player player)
+    protected override void DisableEffects(Player player)
     {
         var affectedUserEffect = AffectedUserEffects.Where(kvp => kvp.Key == player.UserId).FirstOrDefault();
         if (affectedUserEffect.Key != null)

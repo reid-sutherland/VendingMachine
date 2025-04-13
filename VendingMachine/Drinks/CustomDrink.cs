@@ -1,33 +1,119 @@
-﻿using Exiled.API.Features;
+﻿using Exiled.API.Enums;
+using Exiled.API.Features;
 using Exiled.API.Features.Spawn;
 using Exiled.CustomItems.API.Features;
+using Exiled.Events.EventArgs.Player;
+using MEC;
 using System.Collections.Generic;
 using System.ComponentModel;
 using System.Linq;
 using YamlDotNet.Serialization;
+using Player = Exiled.API.Features.Player;
 
 namespace VendingMachine.Drinks;
 
 public abstract class CustomDrink : CustomItem
 {
-    // This is defined here so that the config can't try to define a spawn location, since drinks come out of the vending machine.
-    [YamlIgnore]
-    public override SpawnProperties SpawnProperties { get; set; } = new();
-
-    // This should ONLY be defined in the config.
+    // This should ONLY be defined in the config
     [Description("The chance that the drink is dispensed.")]
     public int Chance { get; set; }
 
-    // These must be used by all drinks so that things like SCP-500 uses can be tracked accordingly
+    // This should be overrided to set a code-defined default duration per drink
+    [Description("How long the drink's effects lasts for. A value of 0 means infinite.")]
+    public virtual float Duration { get; set; } = 180.0f;
+
+    // This is defined here so that the config can't try to set a spawn location, since drinks come out of the vending machine
+    [YamlIgnore]
+    public override SpawnProperties SpawnProperties { get; set; } = new()
+    {
+    };
+
+    // Each drink should use this to track players that are actively affected by the drink
     [YamlIgnore]
     protected Dictionary<string, bool> AffectedUserIds { get; set; } = new();
 
-    // TODO: A lot of this approach could potentially be reworked if I switch this all over to the CustomEffects approach
+    protected override void SubscribeEvents()
+    {
+        Exiled.Events.Handlers.Player.UsedItem += OnItemUsed;
+        Exiled.Events.Handlers.Player.Dying += OnDying;
 
-    // Override this to define what needs to happen when the drink's effect is disabled
-    protected abstract void DisableEffects(Player player);
+        base.SubscribeEvents();
+    }
 
-    // Call this with a reason selected when the drink's effect should be removed
+    protected override void UnsubscribeEvents()
+    {
+        Exiled.Events.Handlers.Player.UsedItem -= OnItemUsed;
+        Exiled.Events.Handlers.Player.Dying -= OnDying;
+
+        base.UnsubscribeEvents();
+    }
+
+    private void OnItemUsed(UsedItemEventArgs ev)
+    {
+        // Disable effect when SCP-500 (red pill) is used
+        if (ev.Item.Type == ItemType.SCP500)
+        {
+            Disable(ev.Player, usedScp500: true);
+            return;
+        }
+
+        if (!Check(ev.Item))
+        {
+            return;
+        }
+        Log.Debug($"{ev.Player.Nickname} used a custom item: {Name}");
+        if (Type == ItemType.SCP207)
+        {
+            ev.Player.DisableEffect(EffectType.AntiScp207);
+        }
+        else if (Type == ItemType.AntiSCP207)
+        {
+            ev.Player.DisableEffect(EffectType.AntiScp207);
+        }
+        else
+        {
+            Log.Warn($"{ev.Player.Nickname} used a custom item with unexpected ItemType: {Type}");
+            Log.Warn($"Effects of custom item may stack with the root ItemType's effect");
+        }
+
+        bool consumed = Enable(ev.Player);
+        if (consumed)
+        {
+            // TODO: Add RemoveOnUse to this conditional to support items that can be re-used
+            ev.Player.RemoveItem(ev.Player.CurrentItem);
+        }
+    }
+
+    public void OnDying(DyingEventArgs ev)
+    {
+        Disable(ev.Player, died: true);
+    }
+
+    // Call this when the drink's effect should be applied to a player
+    // Returns bool: whether item should be removed
+    protected bool Enable(Player player)
+    {
+        if (AffectedUserIds.ContainsKey(player.UserId))
+        {
+            player.ShowHint($"You are already under the effects of {Name}!", 5.0f);
+            Log.Debug($"{player.Nickname} is already under the effects of {Name}: ignoring");
+            return false;
+        }
+
+        AffectedUserIds.Add(player.UserId, true);
+        Log.Info($"Enabling {Name} effect on player: {player.Nickname} for {Duration} seconds");
+        EnableEffects(player);
+        if (Duration > 0)
+        {
+            Timing.CallDelayed(Duration, () =>
+            {
+                Disable(player, expired: true);
+            });
+        }
+        return true;
+    }
+
+    // Call this with a reason selected when the drink's effect should be removed from a player
     protected void Disable(Player player, bool expired = false, bool died = false, bool usedScp500 = false)
     {
         var affectedUserStatus = AffectedUserIds.Where(kvp => kvp.Key == player.UserId).FirstOrDefault();
@@ -42,7 +128,7 @@ public abstract class CustomDrink : CustomItem
             }
             else
             {
-                // TODO: Once it works then we can just maybe remove the secondary log here
+                // TODO: We can just maybe remove the secondary log here
                 logMsg = $"{Name} effect is ALREADY DISABLED on player: {player.Nickname}";
             }
 
@@ -63,4 +149,10 @@ public abstract class CustomDrink : CustomItem
             Log.Debug(logMsg);
         }
     }
+
+    // Override this to define what needs to happen when the drink's effect is enabled
+    protected abstract void EnableEffects(Player player);
+
+    // Override this to define what needs to happen when the drink's effect is disabled
+    protected abstract void DisableEffects(Player player);
 }

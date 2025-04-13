@@ -1,14 +1,10 @@
-﻿using Exiled.API.Enums;
-using Exiled.API.Features;
+﻿using Exiled.API.Features;
 using Exiled.API.Features.Attributes;
 using Exiled.CustomItems.API.Features;
 using Exiled.Events.EventArgs.Player;
-using MEC;
-using System.Collections.Generic;
 using System.ComponentModel;
 using System.Linq;
 using YamlDotNet.Serialization;
-using Player = Exiled.Events.Handlers.Player;
 
 using VendingMachine.Utils.Voice;
 
@@ -30,7 +26,7 @@ public class HeliumHatch : CustomDrink
     public override float Weight { get; set; } = 1.0f;
 
     [Description("How long the drink's effects lasts for. A value of 0 means infinite.")]
-    public float Duration { get; set; } = 300.0f;
+    public override float Duration { get; set; } = 300.0f;
 
     // TODO: The voice effect is currently scuffed.
     // It works great when one person uses one.
@@ -40,81 +36,42 @@ public class HeliumHatch : CustomDrink
 
     protected override void SubscribeEvents()
     {
-        Player.UsedItem += OnItemUsed;
-        Player.Dying += OnDying;
-        Player.VoiceChatting += OnVoiceChatting;
+        Exiled.Events.Handlers.Player.VoiceChatting += OnVoiceChatting;
 
         base.SubscribeEvents();
     }
 
     protected override void UnsubscribeEvents()
     {
-        Player.UsedItem -= OnItemUsed;
-        Player.Dying -= OnDying;
-        Player.VoiceChatting -= OnVoiceChatting;
+        Exiled.Events.Handlers.Player.VoiceChatting -= OnVoiceChatting;
 
         base.UnsubscribeEvents();
     }
 
-    private void OnItemUsed(UsedItemEventArgs ev)
-    {
-        // Disable effect when SCP-500 (red pill) is used
-        if (ev.Item.Type == ItemType.SCP500)
-        {
-            Disable(ev.Player, usedScp500: true);
-            return;
-        }
-
-        if (!Check(ev.Item))
-        {
-            return;
-        }
-        ev.Player.DisableEffect(EffectType.AntiScp207);
-        Log.Debug($"{ev.Player.Nickname} used a custom item: {Name}");
-
-        if (AffectedUserIds.ContainsKey(ev.Player.UserId))
-        {
-            Log.Debug($"{ev.Player.Nickname} is already under the affects of {Name}: ignoring");
-            return;
-        }
-
-        AffectedUserIds.Add(ev.Player.UserId, true);
-        Log.Info($"Enabling {Name} effect on player: {ev.Player.Nickname} for {Duration} seconds");
-        if (Duration > 0)
-        {
-            Timing.CallDelayed(Duration, () =>
-            {
-                Disable(ev.Player, expired: true);
-            });
-        }
-
-        ev.Player.RemoveItem(ev.Player.CurrentItem);
-    }
-
-    public void OnDying(DyingEventArgs ev)
-    {
-        Disable(ev.Player, died: true);
-    }
-
     public void OnVoiceChatting(VoiceChattingEventArgs ev)
     {
-        var affectedUserStatus = AffectedUserIds.Where(kvp => kvp.Key == ev.Player.UserId).FirstOrDefault();
-        if (affectedUserStatus.Key != null)
+        // For performance, first check the count of affected players (since this handler is called when any player chats)
+        if (AffectedUserIds.Count <= 0)
         {
-            if (affectedUserStatus.Value)
-            {
-                ev.VoiceMessage = VoicePitchUtils.SetVoicePitch(ev.VoiceMessage);
-            }
+            return;
+        }
+
+        // Check that the player is affected before applying voice pitch
+        if (AffectedUserIds.ContainsKey(ev.Player.UserId))
+        {
+            ev.VoiceMessage = VoicePitchUtils.SetVoicePitch(ev.VoiceMessage);
         }
     }
 
-    protected override void DisableEffects(Exiled.API.Features.Player player)
+    protected override void EnableEffects(Player player)
     {
-        // TODO: This might be completely un-necessary - maybe nothing needs doing here
-        var affectedUserStatus = AffectedUserIds.Where(kvp => kvp.Key == player.UserId).FirstOrDefault();
-        if (affectedUserStatus.Key != null)
-        {
-            AffectedUserIds[affectedUserStatus.Key] = false;
-        }
+        // Nothing to do, OnVoiceChatting will take care of checking that the player is currently affected
+        return;
+    }
+
+    protected override void DisableEffects(Player player)
+    {
+        // Nothing to do, Disable will remove player from affected users
+        return;
     }
 }

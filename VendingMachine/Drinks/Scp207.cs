@@ -21,8 +21,11 @@ public class Scp207 : CustomDrink
     [YamlIgnore]
     public override float Weight { get; set; } = 1.0f;
 
+    protected override void EnableEffects(Player player)
+    {
+    }
+
     protected override void DisableEffects(Player player)
     {
-        return;
     }
 }

@@ -1,7 +1,6 @@
 ﻿using Exiled.API.Features;
 using Exiled.API.Features.Attributes;
 using Exiled.CustomItems.API.Features;
-using System.Collections.Generic;
 using YamlDotNet.Serialization;
 
 namespace VendingMachine.Drinks;
@@ -21,8 +20,11 @@ public class AntiScp207 : CustomDrink
     [YamlIgnore]
     public override float Weight { get; set; } = 1.0f;
 
+    protected override void EnableEffects(Player player)
+    {
+    }
+
     protected override void DisableEffects(Player player)
     {
-        return;
     }
 }
