@@ -25,9 +25,6 @@ public sealed class Config : IConfig
     [Description("The rooms and positions where the vending machine can spawn.")]
     public Dictionary<RoomType, Vector3> SpawnPoints { get; set; } = new();
 
-    [Description("The chances for each drink to be dispensed.")]
-    public Dictionary<CustomDrink, int> EffectChances { get; private set; } = new();
-
     // It's too difficult to make a list of drinks since CustomDrink can't be instantiated
     // So define them individually here
 
@@ -54,4 +51,12 @@ public sealed class Config : IConfig
 
     [Description("McDonald's Sprite. Gives you hypothermia.")]
     public McDonaldsSprite McDonaldsSprite { get; set; } = new();
+
+    [Description("Panera Lemonade. Hypes you up with speed and DR, but has a chance to cause a heart attack afterwards.")]
+    public PaneraLemonade PaneraLemonade { get; set; } = new();
+
+    // NEW DRINK IDEAS:
+    //  - (Pepe) FiftyFifty: either kills you or makes you invincible for a while
+    //  - (Pepe) SmokeBomb: spit out a vase-style cloud and/or flashbang everyone around you
+    //  - (Binky) PaneraLemonade: HeartAttack + speed boost (or something else that makes it unique from SCP207) -- override Scale to make it huge lmao
 }
