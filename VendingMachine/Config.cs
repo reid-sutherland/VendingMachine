@@ -15,10 +15,13 @@ public sealed class Config : IConfig
 
     public bool Debug { get; set; } = false;
 
-    [Description("Whether AudioAPI routines will write logs to debug")]
+    [Description("Whether AudioAPI routines will write logs to debug.")]
     public bool AudioDebug { get; set; } = false;
 
-    [Description("Whether or not probabilities should be additive (50 + 50 = 100) or not (50 + 50 = 2 seperate 50% chances)")]
+    [Description("Whether AMERT interaction will log things like distance to interactable schematics.")]
+    public bool AmertDebug { get; set; } = false;
+
+    [Description("Whether or not probabilities should be additive (50 + 50 = 100) or not (50 + 50 = 2 seperate 50% chances).")]
     public bool AdditiveProbabilities { get; set; } = true;
 
     // TODO: This should default to any of the basic 'rooms' (not 'hallways') in Entrance Zone

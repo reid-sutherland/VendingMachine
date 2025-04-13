@@ -104,7 +104,10 @@ public class MainPlugin : Plugin<Config>
             {
                 foreach (InteractableObject interactable in hit.collider.GetComponentsInParent<InteractableObject>())
                 {
-                    Log.Debug($"-- Player {Player.Get(sender).Nickname} interacted with object: {hit.collider.gameObject.name} - interactable: {interactable.gameObject.name} - distance: {hit.distance}");
+                    if (Configs.AmertDebug)
+                    {
+                        Log.Debug($"-- Player {Player.Get(sender).Nickname} interacted with object: {hit.collider.gameObject.name} - interactable: {interactable.gameObject.name} - distance: {hit.distance}");
+                    }
                     if (hit.distance <= interactable.Base.InteractionMaxRange)
                     {
                         Player player = Player.Get(sender);
@@ -117,7 +120,10 @@ public class MainPlugin : Plugin<Config>
                                 Scp294.OnDrawerInteracted(player);
                                 break;
                             default:
-                                Log.Debug($"Unknown interactable: {interactable.gameObject.name}");
+                                if (Config.AmertDebug)
+                                {
+                                    Log.Debug($"Unknown interactable: {interactable.gameObject.name}");
+                                }
                                 break;
                         }
                     }
