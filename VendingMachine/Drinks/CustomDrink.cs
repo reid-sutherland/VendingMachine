@@ -24,9 +24,7 @@ public abstract class CustomDrink : CustomItem
 
     // This is defined here so that the config can't try to set a spawn location, since drinks come out of the vending machine
     [YamlIgnore]
-    public override SpawnProperties SpawnProperties { get; set; } = new()
-    {
-    };
+    public override SpawnProperties SpawnProperties { get; set; } = new();
 
     // Each drink should use this to track players that are actively affected by the drink
     [YamlIgnore]
@@ -79,6 +77,7 @@ public abstract class CustomDrink : CustomItem
         bool consumed = Enable(ev.Player);
         if (consumed)
         {
+            // TODO: This doesn't actually work yet, item is always removed. might be the base OnItemUsed is still removing it. Maybe give them a new one back or some shit
             // TODO: Add RemoveOnUse to this conditional to support items that can be re-used
             ev.Player.RemoveItem(ev.Player.CurrentItem);
         }

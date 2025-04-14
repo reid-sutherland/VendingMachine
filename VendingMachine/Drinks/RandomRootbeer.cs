@@ -49,7 +49,7 @@ public class RandomRootbeer : CustomDrink
         { EffectType.Exhausted, 5 },
     };
 
-    private Dictionary<string, EffectType> AffectedUserEffects { get; set; }
+    private Dictionary<string, EffectType> AffectedUserEffects { get; set; } = new();
 
     protected override void EnableEffects(Player player)
     {

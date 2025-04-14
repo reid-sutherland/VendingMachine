@@ -37,7 +37,7 @@ public class McDonaldsSprite : CustomDrink
     [Description("How much to increase health given after each proc. This is done because Hypothermia damage ramps up over time.")]
     public float HealthIncrement { get; set; } = 10.0f;
 
-    private Dictionary<string, float> AffectedUserCurrentHealthGiven { get; set; }
+    private Dictionary<string, float> AffectedUserCurrentHealthGiven { get; set; } = new();
 
     protected override void EnableEffects(Player player)
     {
@@ -49,7 +49,7 @@ public class McDonaldsSprite : CustomDrink
         }
 
         AffectedUserCurrentHealthGiven.Add(player.UserId, HealthGiven);
-        player.EnableEffect(EffectType.Hypothermia, 255, Duration);
+        player.EnableEffect(EffectType.Hypothermia, 255, Duration, addDurationIfActive: true);
         GiveHealth(player);
     }
 
