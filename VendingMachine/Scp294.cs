@@ -1,5 +1,6 @@
 ﻿using Exiled.API.Enums;
 using Exiled.API.Features;
+using Exiled.CustomItems.API.Features;
 using Exiled.Events.EventArgs.Server;
 using MapEditorReborn.API.Features;
 using MapEditorReborn.API.Features.Objects;
@@ -125,9 +126,32 @@ public class Scp294
                 return;
             }
 
-            player.RemoveItem(player.CurrentItem);
-            DrawerCount++;
+            bool removeCoin = true;
+            if (MainPlugin.Configs.CoinWithAString.Check(player))
+            {
+                bool check = CustomItem.TryGet(player, out CustomItem customItem);
+                if (check)
+                {
+                    CoinWithAString coin = (CoinWithAString)customItem;
+                    if (coin.Uses > 1)
+                    {
+                        coin.Uses--;
+                        removeCoin = false;
+                        Log.Debug($"Player was holding a CWAS: uses left: {coin.Uses}");
+                    }
+                    else
+                    {
+                        player.ShowHint($"Uh oh... the string broke!", 5.0f);
+                        Log.Debug($"Player was holding a CWAS: that was the last use, removing");
+                    }
+                }
+            }
+            if (removeCoin)
+            {
+                player.RemoveItem(player.CurrentItem);
+            }
 
+            DrawerCount++;
             AudioHelper.PlayAudioClip(AudioPlayerName, audioDispenseEffect, model);
         }
         catch (Exception ex)

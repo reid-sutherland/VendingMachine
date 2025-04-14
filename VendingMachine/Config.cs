@@ -28,6 +28,9 @@ public sealed class Config : IConfig
     [Description("The rooms and positions where the vending machine can spawn.")]
     public Dictionary<RoomType, Vector3> SpawnPoints { get; set; } = new();
 
+    [Description("Configure where Coin-with-a-string can spawn.")]
+    public CoinWithAString CoinWithAString { get; set; } = new();
+
     // It's too difficult to make a list of drinks since CustomDrink can't be instantiated
     // So define them individually here
 

@@ -35,7 +35,7 @@ public class PaneraLemonade : CustomDrink
 
     protected override void EnableEffects(Player player)
     {
-        player.EnableEffect(EffectType.BodyshotReduction, 200, Duration);
+        player.EnableEffect(EffectType.BodyshotReduction, 128, Duration);
         player.EnableEffect(EffectType.Invigorated, 255, Duration);
         player.EnableEffect(EffectType.MovementBoost, 255, Duration);
 
