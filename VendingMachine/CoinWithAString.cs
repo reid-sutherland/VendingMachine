@@ -30,6 +30,7 @@ public class CoinWithAString : CustomItem
     [Description("Whether or not the coin will spawn around the map on round start")]
     public bool SpawnEnabled { get; set; } = true;
 
+    // TODO: Need to find a way to make this variable unique per item and not 'static'
     [Description("How many times the coin can be used before the string breaks.")]
     public int Uses { get; set; } = 4;
 
