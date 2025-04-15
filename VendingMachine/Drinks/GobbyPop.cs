@@ -2,6 +2,7 @@
 using Exiled.API.Features;
 using Exiled.API.Features.Attributes;
 using Exiled.CustomItems.API.Features;
+using System.Collections.Generic;
 using System.ComponentModel;
 using YamlDotNet.Serialization;
 
@@ -25,12 +26,15 @@ public class GobbyPop : CustomDrink
     [Description("How long the drink's effects lasts for. A value of 0 means infinite.")]
     public override float Duration { get; set; } = 0.0f;
 
+    [Description("User IDs of players that should receive the Gobby effect. :)")]
+    public List<string> GobbyEquivalentIds { get; set; } = new();
+
     [Description("Effect given to non-gobbys. Defaults to RainbowTaste which reduces negative effects.")]
     public EffectType Effect { get; set; } = EffectType.RainbowTaste;
 
     protected override void EnableEffects(Player player)
     {
-        if (player.UserId == "76561198076399181@steam")
+        if (GobbyEquivalentIds.Contains(player.UserId))
         {
             // the gobby effect is reserved for gobby-equivalents
             player.EnableEffect(EffectType.Blinded, 255, 0.0f, addDurationIfActive: true);
@@ -45,7 +49,7 @@ public class GobbyPop : CustomDrink
 
     protected override void DisableEffects(Player player)
     {
-        if (player.UserId == "76561198076399181@steam")
+        if (GobbyEquivalentIds.Contains(player.UserId))
         {
             player.DisableEffect(EffectType.Blinded);
         }

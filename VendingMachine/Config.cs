@@ -64,5 +64,4 @@ public sealed class Config : IConfig
     // NEW DRINK IDEAS:
     //  - (Pepe) FiftyFifty: either kills you or makes you invincible for a while
     //  - (Pepe) SmokeBomb: spit out a vase-style cloud and/or flashbang everyone around you
-    //  - (Binky) PaneraLemonade: HeartAttack + speed boost (or something else that makes it unique from SCP207) -- override Scale to make it huge lmao
 }
