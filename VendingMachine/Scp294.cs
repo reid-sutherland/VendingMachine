@@ -7,6 +7,7 @@ using MapEditorReborn.API.Features.Objects;
 using MEC;
 using System;
 using System.Collections.Generic;
+using System.Diagnostics.SymbolStore;
 using System.Linq;
 using System.Reflection;
 using UnityEngine;
@@ -133,17 +134,7 @@ public class Scp294
                 if (check)
                 {
                     CoinWithAString coin = (CoinWithAString)customItem;
-                    if (coin.Uses > 1)
-                    {
-                        coin.Uses--;
-                        removeCoin = false;
-                        Log.Debug($"Player was holding a CWAS: uses left: {coin.Uses}");
-                    }
-                    else
-                    {
-                        player.ShowHint($"Uh oh... the string broke!", 5.0f);
-                        Log.Debug($"Player was holding a CWAS: that was the last use, removing");
-                    }
+                    removeCoin = coin.Use(player);
                 }
             }
             if (removeCoin)
