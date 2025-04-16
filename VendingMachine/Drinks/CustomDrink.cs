@@ -62,7 +62,7 @@ public abstract class CustomDrink : CustomItem
         Log.Debug($"{ev.Player.Nickname} used a custom item: {Name}");
         if (Type == ItemType.SCP207)
         {
-            ev.Player.DisableEffect(EffectType.AntiScp207);
+            ev.Player.DisableEffect(EffectType.Scp207);
         }
         else if (Type == ItemType.AntiSCP207)
         {

@@ -1,4 +1,5 @@
-﻿using Exiled.API.Features;
+﻿using Exiled.API.Enums;
+using Exiled.API.Features;
 using Exiled.API.Features.Attributes;
 using Exiled.CustomItems.API.Features;
 using YamlDotNet.Serialization;
@@ -22,9 +23,12 @@ public class AntiScp207 : CustomDrink
 
     protected override void EnableEffects(Player player)
     {
+        // Since CustomDrink disables this effect, re-enable it here
+        player.EnableEffect(EffectType.AntiScp207, 255, 0.0f);
     }
 
     protected override void DisableEffects(Player player)
     {
+        player.DisableEffect(EffectType.AntiScp207);
     }
 }

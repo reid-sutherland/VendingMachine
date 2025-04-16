@@ -1,7 +1,7 @@
-﻿using Exiled.API.Features;
+﻿using Exiled.API.Enums;
+using Exiled.API.Features;
 using Exiled.API.Features.Attributes;
 using Exiled.CustomItems.API.Features;
-using System.Collections.Generic;
 using YamlDotNet.Serialization;
 
 namespace VendingMachine.Drinks;
@@ -23,9 +23,12 @@ public class Scp207 : CustomDrink
 
     protected override void EnableEffects(Player player)
     {
+        // Since CustomDrink disables this effect, re-enable it here
+        player.EnableEffect(EffectType.Scp207, 255, 0.0f);
     }
 
     protected override void DisableEffects(Player player)
     {
+        player.DisableEffect(EffectType.Scp207);
     }
 }
