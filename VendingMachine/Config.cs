@@ -73,4 +73,5 @@ public sealed class Config : IConfig
     // NEW DRINK IDEAS:
     //  - (Pepe) FiftyFifty: either kills you or makes you invincible for a while
     //  - (Pepe) SmokeBomb: spit out a vase-style cloud and/or flashbang everyone around you
+    //  - (Reid) BajaBlast: similar to Jihad from TTT (Gmod) lol - maybe does a lot of SCP damage + friendly fire on or something
 }
