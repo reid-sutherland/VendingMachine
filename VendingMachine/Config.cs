@@ -28,6 +28,15 @@ public sealed class Config : IConfig
     [Description("The rooms and positions where the vending machine can spawn.")]
     public Dictionary<RoomType, Vector3> SpawnPoints { get; set; } = new();
 
+    [Description("Whether or not card-skimming is enabled (using a keycard for a drink or grenade).")]
+    public bool SkimmingEnabled { get; set; } = false;
+
+    [Description("The minimum time between skim attempts in seconds.")]
+    public double SkimmingCooldown { get; set; } = 1.0d;
+
+    [Description("The fuse time on the grenade spawned on a bad skim.")]
+    public float GrenadeFuseTime { get; set; } = 0.5f;
+
     [Description("Coin With A String. The ole' Mr. Krabs vending machine hack. Can spawn around the map.")]
     public CoinWithAString CoinWithAString { get; set; } = new();
 

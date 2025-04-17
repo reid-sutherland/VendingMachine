@@ -46,6 +46,8 @@ public class Scp294
 
     private CoroutineHandle ambientAudioHandle;
 
+    private DateTime LastSkimTime { get; set; } = DateTime.Now;
+
     public void OnRoundStarted()
     {
         Log.Debug("Round started: spawning vending machine");
@@ -114,15 +116,45 @@ public class Scp294
 
         try
         {
-            Log.Debug($"Player {player.Nickname} interacted with the vending machine control panel");
+            Log.Debug($"Player {player.Nickname} interacted with the VM control panel");
             if (player.IsScp)
             {
-                Log.Debug("Player was SCP");
+                Log.Debug("-- Player was SCP");
                 return;
             }
-            if (player.CurrentItem is null || player.CurrentItem.Type != ItemType.Coin)
+            else if (MainPlugin.Configs.SkimmingEnabled && player.CurrentItem.IsKeycard && player.CurrentItem.Type != ItemType.KeycardGuard)
             {
-                Log.Debug($"Player was NOT holding a coin");
+                DateTime now = DateTime.Now;
+                if (now - LastSkimTime >= TimeSpan.FromSeconds(MainPlugin.Configs.SkimmingCooldown))
+                {
+                    int rand = MainPlugin.Random.Next(2);
+                    if (rand > 0)
+                    {
+                        // free drink :)
+                        DrawerCount++;
+                        AudioHelper.PlayAudioClip(AudioPlayerName, audioDispenseEffect, model);
+                        Log.Debug($"-- Player was holding keycard: rand={rand} - drink dispensed");
+                    }
+                    else
+                    {
+                        // spawn a grenade
+                        var grenadeItem = (Exiled.API.Features.Items.ExplosiveGrenade)Exiled.API.Features.Items.Item.Create(ItemType.GrenadeHE);
+                        grenadeItem.FuseTime = 0.5f;
+                        grenadeItem.FuseTime = MainPlugin.Configs.GrenadeFuseTime;
+                        var grenade = grenadeItem.SpawnActive(player.Position);
+                        Log.Debug($"-- Player was holding keycard: rand={rand} - grenade time");
+                    }
+                }
+                else
+                {
+                    Log.Debug("-- Skimming is on cooldown");
+                }
+                LastSkimTime = now;
+                return;
+            }
+            else if (player.CurrentItem.Type != ItemType.Coin)
+            {
+                Log.Debug($"-- Player was NOT holding a coin");
                 return;
             }
 
