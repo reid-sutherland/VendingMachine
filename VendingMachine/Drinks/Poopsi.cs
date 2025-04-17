@@ -20,9 +20,6 @@ public class Poopsi : CustomDrink
     [YamlIgnore]
     public override string Description { get; set; } = "Causes extreme diarrhea... that makes you stronger";
 
-    [YamlIgnore]
-    public override float Weight { get; set; } = 1.0f;
-
     [Description("How long the drink's effects lasts for. A value of 0 means infinite.")]
     public override float Duration { get; set; } = 90.0f;
 

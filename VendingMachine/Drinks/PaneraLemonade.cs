@@ -1,7 +1,6 @@
 ﻿using Exiled.API.Enums;
 using Exiled.API.Features;
 using Exiled.API.Features.Attributes;
-using Exiled.API.Features.Roles;
 using Exiled.CustomItems.API.Features;
 using MEC;
 using System.ComponentModel;
@@ -21,9 +20,6 @@ public class PaneraLemonade : CustomDrink
 
     [YamlIgnore]
     public override string Description { get; set; } = "There's a LOT of caffeine in this... drink at your own risk!";
-
-    [YamlIgnore]
-    public override float Weight { get; set; } = 1.0f;
 
     [YamlIgnore]
     public override Vector3 Scale { get; set; } = new Vector3(2.0f, 2.0f, 2.0f);

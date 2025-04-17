@@ -22,9 +22,6 @@ public class McDonaldsSprite : CustomDrink
     [YamlIgnore]
     public override string Description { get; set; } = "Drink it to experience that cool and crisp Sprite taste";
 
-    [YamlIgnore]
-    public override float Weight { get; set; } = 1.0f;
-
     [Description("How long the drink's effects lasts for. A value of 0 means infinite.")]
     public override float Duration { get; set; } = 30.0f;
 

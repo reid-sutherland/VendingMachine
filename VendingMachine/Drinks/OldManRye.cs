@@ -19,9 +19,6 @@ public class OldManRye : CustomDrink
     [YamlIgnore]
     public override string Description { get; set; } = "The whiskey that reminds you of your old man";
 
-    [YamlIgnore]
-    public override float Weight { get; set; } = 1.0f;
-
     [Description("How long the drink's effects lasts for. A value of 0 means infinite.")]
     public override float Duration { get; set; } = 120.0f;
 

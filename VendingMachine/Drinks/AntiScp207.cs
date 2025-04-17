@@ -18,9 +18,6 @@ public class AntiScp207 : CustomDrink
     [YamlIgnore]
     public override string Description { get; set; } = "Become tanky at the cost of move speed";
 
-    [YamlIgnore]
-    public override float Weight { get; set; } = 1.0f;
-
     protected override void EnableEffects(Player player)
     {
         // Since CustomDrink disables this effect, re-enable it here

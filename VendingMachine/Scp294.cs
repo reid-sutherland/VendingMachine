@@ -7,7 +7,6 @@ using MapEditorReborn.API.Features.Objects;
 using MEC;
 using System;
 using System.Collections.Generic;
-using System.Diagnostics.SymbolStore;
 using System.Linq;
 using System.Reflection;
 using UnityEngine;
@@ -45,7 +44,7 @@ public class Scp294
     private readonly string audioDispenseEffect = "DispenseDrink.ogg";
     private readonly List<string> audioAmbient = new() { "song1.ogg", "song2.ogg", "song3.ogg" };
 
-    private CoroutineHandle coroutineHandle;
+    private CoroutineHandle ambientAudioHandle;
 
     public void OnRoundStarted()
     {
@@ -81,7 +80,7 @@ public class Scp294
                     Log.Debug($"-- model position: {model.Position} - model euler rotation: {model.Rotation.eulerAngles}");
 
                     // Play ambient music indefinitely
-                    coroutineHandle = Timing.RunCoroutine(AmbientAudioCoroutine());
+                    ambientAudioHandle = Timing.RunCoroutine(AmbientAudioCoroutine());
                 }
                 else
                 {
@@ -101,7 +100,7 @@ public class Scp294
     public void OnRoundEnded(RoundEndedEventArgs ev)
     {
         Log.Debug("Round ended");
-        Timing.KillCoroutines(coroutineHandle);
+        Timing.KillCoroutines(ambientAudioHandle);
         model?.Destroy();
         model = null;
     }

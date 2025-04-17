@@ -18,9 +18,6 @@ public class Scp207 : CustomDrink
     [YamlIgnore]
     public override string Description { get; set; } = "Move fast at the cost of health";
 
-    [YamlIgnore]
-    public override float Weight { get; set; } = 1.0f;
-
     protected override void EnableEffects(Player player)
     {
         // Since CustomDrink disables this effect, re-enable it here

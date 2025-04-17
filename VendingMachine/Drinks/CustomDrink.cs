@@ -7,6 +7,7 @@ using MEC;
 using System.Collections.Generic;
 using System.ComponentModel;
 using System.Linq;
+using UnityEngine;
 using YamlDotNet.Serialization;
 using Player = Exiled.API.Features.Player;
 
@@ -14,6 +15,17 @@ namespace VendingMachine.Drinks;
 
 public abstract class CustomDrink : CustomItem
 {
+    // These are defined here so that the config doesn't try to mess with them
+    [YamlIgnore]
+    public override float Weight { get; set; } = 1.0f;
+
+    [YamlIgnore]
+    public override Vector3 Scale { get; set; } = new Vector3(1.0f, 1.0f, 1.0f);
+
+    // This is defined here so that the config can't try to set a spawn location, since drinks come out of the vending machine
+    [YamlIgnore]
+    public override SpawnProperties SpawnProperties { get; set; } = new();
+
     // This should ONLY be defined in the config
     [Description("The chance that the drink is dispensed.")]
     public int Chance { get; set; }
@@ -21,10 +33,6 @@ public abstract class CustomDrink : CustomItem
     // This should be overrided to set a code-defined default duration per drink
     [Description("How long the drink's effects lasts for. A value of 0 means infinite.")]
     public virtual float Duration { get; set; } = 180.0f;
-
-    // This is defined here so that the config can't try to set a spawn location, since drinks come out of the vending machine
-    [YamlIgnore]
-    public override SpawnProperties SpawnProperties { get; set; } = new();
 
     // Each drink should use this to track players that are actively affected by the drink
     [YamlIgnore]
