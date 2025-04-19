@@ -120,7 +120,10 @@ public class Scp294
             if (player.IsScp)
             {
                 Log.Debug("-- Player was SCP");
-                return;
+            }
+            else if (player.CurrentItem is null)
+            {
+                Log.Debug("-- Player was holding nothing");
             }
             else if (MainPlugin.Configs.SkimmingEnabled && player.CurrentItem.IsKeycard && player.CurrentItem.Type != ItemType.KeycardGuard)
             {
@@ -150,31 +153,31 @@ public class Scp294
                     Log.Debug("-- Skimming is on cooldown");
                 }
                 LastSkimTime = now;
-                return;
             }
             else if (player.CurrentItem.Type != ItemType.Coin)
             {
                 Log.Debug($"-- Player was NOT holding a coin");
-                return;
             }
-
-            bool removeCoin = true;
-            if (MainPlugin.Configs.CoinWithAString.Check(player))
+            else
             {
-                bool check = CustomItem.TryGet(player, out CustomItem customItem);
-                if (check)
+                bool removeCoin = true;
+                if (MainPlugin.Configs.CoinWithAString.Check(player))
                 {
-                    CoinWithAString coin = (CoinWithAString)customItem;
-                    removeCoin = coin.Use(player);
+                    bool check = CustomItem.TryGet(player, out CustomItem customItem);
+                    if (check)
+                    {
+                        CoinWithAString coin = (CoinWithAString)customItem;
+                        removeCoin = coin.Use(player);
+                    }
                 }
-            }
-            if (removeCoin)
-            {
-                player.RemoveItem(player.CurrentItem);
-            }
+                if (removeCoin)
+                {
+                    player.RemoveItem(player.CurrentItem);
+                }
 
-            DrawerCount++;
-            AudioHelper.PlayAudioClip(AudioPlayerName, audioDispenseEffect, model);
+                DrawerCount++;
+                AudioHelper.PlayAudioClip(AudioPlayerName, audioDispenseEffect, model);
+            }
         }
         catch (Exception ex)
         {
