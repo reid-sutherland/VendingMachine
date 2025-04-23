@@ -48,7 +48,6 @@ public class MainPlugin : Plugin<Config>
         Random = new();
 
         ServerSpecificSettingsSync.ServerOnSettingValueReceived += OnSSInput;
-        Exiled.Events.Handlers.Server.RoundStarted += OnRoundStarted;
         Exiled.Events.Handlers.Server.RoundStarted += Scp294.OnRoundStarted;
         Exiled.Events.Handlers.Server.RoundEnded += Scp294.OnRoundEnded;
 
@@ -89,31 +88,11 @@ public class MainPlugin : Plugin<Config>
         }
 
         ServerSpecificSettingsSync.ServerOnSettingValueReceived -= OnSSInput;
-        Exiled.Events.Handlers.Server.RoundStarted -= OnRoundStarted;
         Exiled.Events.Handlers.Server.RoundStarted -= Scp294.OnRoundStarted;
         Exiled.Events.Handlers.Server.RoundEnded -= Scp294.OnRoundEnded;
 
         Singleton = null;
         Scp294 = null;
-    }
-
-    public void OnRoundStarted()
-    {
-        //if (Config.CoinWithAString.SpawnEnabled)
-        //{
-        //    Log.Info($"Round started: spawning CoinWithAString");
-        //    Configs.CoinWithAString.SpawnAll();
-
-        //    // Wait a couple seconds for the coins to spawn
-        //    Timing.CallDelayed(2.0f, () =>
-        //    {
-        //        Log.Info("ROUND START - COINWITHASTRING: checking tracked serials");
-        //        foreach (int ser in Config.CoinWithAString.TrackedSerials)
-        //        {
-        //            Log.Info($"-- serial: {ser}");
-        //        }
-        //    });
-        //}
     }
 
     public void OnSSInput(ReferenceHub sender, ServerSpecificSettingBase setting)

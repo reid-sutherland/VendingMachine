@@ -8,11 +8,9 @@ namespace VendingMachine.Utils;
 
 public static class AudioHelper
 {
-    public static string AudioPath => Path.Combine(Paths.Exiled, "Audio", "SCP294");
-
-    public static void LoadAudioClip(string audioFile)
+    public static void LoadAudioClip(string audioDir, string audioFile)
     {
-        string filepath = Path.Combine(AudioPath, audioFile);
+        string filepath = Path.Combine(audioDir, audioFile);
         string name = audioFile.Replace(".ogg", "");
         if (MainPlugin.Configs.AudioDebug)
         {
@@ -24,26 +22,26 @@ public static class AudioHelper
         }
     }
 
-    public static void LoadAudioClips(List<string> audioFiles)
+    public static void LoadAudioClips(string audioDir, List<string> audioFiles)
     {
         foreach (string file in audioFiles)
         {
-            LoadAudioClip(file);
+            LoadAudioClip(audioDir, file);
         }
     }
 
-    public static void PlayAudioClip(string playerName, string clip, MapEditorObject model)
+    public static void PlayAudioClip(string audioPlayerName, string clip, MapEditorObject model)
     {
         // TODO: When SCP294 starts spawning in random places, we should consider increasing the ambient range to make it easier to find
 
         clip = clip.Replace(".ogg", "");
-        AudioPlayer audioPlayer = AudioPlayer.CreateOrGet(playerName, onIntialCreation: (player) =>
+        AudioPlayer audioPlayer = AudioPlayer.CreateOrGet(audioPlayerName, onIntialCreation: (audioPlayer) =>
         {
             // Attach created audio player to player.
-            player.transform.parent = model.transform;
+            audioPlayer.transform.parent = model.transform;
 
             // This created speaker will be in 3D space.
-            Speaker speaker = player.AddSpeaker("Main", isSpatial: true, minDistance: 1f, maxDistance: 15f);
+            Speaker speaker = audioPlayer.AddSpeaker("Main", isSpatial: true, minDistance: 1.0f, maxDistance: 30.0f);
 
             // Attach created speaker to player.
             speaker.transform.parent = model.transform;

@@ -3,10 +3,8 @@ using Exiled.API.Features;
 using Exiled.API.Features.Attributes;
 using Exiled.API.Features.Spawn;
 using Exiled.CustomItems.API.Features;
-using InventorySystem.Items.Coin;
 using System.Collections.Generic;
 using System.ComponentModel;
-using System.Linq;
 using UnityEngine;
 using YamlDotNet.Serialization;
 

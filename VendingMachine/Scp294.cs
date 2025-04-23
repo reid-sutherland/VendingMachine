@@ -7,6 +7,7 @@ using MapEditorReborn.API.Features.Objects;
 using MEC;
 using System;
 using System.Collections.Generic;
+using System.IO;
 using System.Linq;
 using System.Reflection;
 using UnityEngine;
@@ -18,13 +19,6 @@ namespace VendingMachine;
 
 public class Scp294
 {
-    public Scp294()
-    {
-        Log.Info($"Loading audio clips from directory: {AudioHelper.AudioPath}");
-        AudioHelper.LoadAudioClip(audioDispenseEffect);
-        AudioHelper.LoadAudioClips(audioAmbient);
-    }
-
     private MapEditorObject model;
 
     public Vector3 WorldPosition { get; private set; } = Vector3.zero;
@@ -39,6 +33,8 @@ public class Scp294
 
     public int DrawerCount { get; private set; } = 0;
 
+    public string AudioPath => Path.Combine(Paths.Exiled, "Audio", "SCP294");
+
     public string AudioPlayerName => GetType().Name;
 
     private readonly string audioDispenseEffect = "DispenseDrink.ogg";
@@ -50,8 +46,11 @@ public class Scp294
 
     public void OnRoundStarted()
     {
-        Log.Debug("Round started: spawning vending machine");
+        Log.Info($"Loading SCP-294 audio clips from directory: {AudioPath}");
+        AudioHelper.LoadAudioClip(AudioPath, audioDispenseEffect);
+        AudioHelper.LoadAudioClips(AudioPath, audioAmbient);
 
+        Log.Debug("Round started: spawning vending machine");
         int maxTries = 5;
         for (int i = 0; i < maxTries; i++)
         {
@@ -297,10 +296,6 @@ public class Scp294
 
             // Note: Each song is currently about 30s
             int waitTime = MainPlugin.Random.Next(60, 120);
-            if (MainPlugin.Configs.AudioDebug)
-            {
-                Log.Debug($"Waiting {waitTime} seconds before playing next ambient audio");
-            }
             yield return Timing.WaitForSeconds(waitTime);
         }
     }
