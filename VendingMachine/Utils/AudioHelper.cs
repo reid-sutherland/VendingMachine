@@ -22,7 +22,7 @@ public static class AudioHelper
         }
     }
 
-    public static void LoadAudioClips(string audioDir, List<string> audioFiles)
+    public static void LoadAudioClips(string audioDir, IEnumerable<string> audioFiles)
     {
         foreach (string file in audioFiles)
         {
@@ -41,7 +41,7 @@ public static class AudioHelper
             audioPlayer.transform.parent = model.transform;
 
             // This created speaker will be in 3D space.
-            Speaker speaker = audioPlayer.AddSpeaker("Main", isSpatial: true, minDistance: 1.0f, maxDistance: 30.0f);
+            Speaker speaker = audioPlayer.AddSpeaker("Main", isSpatial: true, minDistance: 3.0f, maxDistance: 35.0f);
 
             // Attach created speaker to player.
             speaker.transform.parent = model.transform;

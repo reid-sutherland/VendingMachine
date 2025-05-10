@@ -3,6 +3,7 @@ using Exiled.API.Features;
 using Exiled.API.Features.Spawn;
 using Exiled.CustomItems.API.Features;
 using Exiled.Events.EventArgs.Player;
+using Exiled.Events.EventArgs.Server;
 using MEC;
 using System.Collections.Generic;
 using System.ComponentModel;
@@ -40,6 +41,8 @@ public abstract class CustomDrink : CustomItem
 
     protected override void SubscribeEvents()
     {
+        Exiled.Events.Handlers.Server.RoundEnded += OnRoundEnded;
+        Exiled.Events.Handlers.Server.RestartingRound += OnRestartingRound;
         Exiled.Events.Handlers.Player.UsedItem += OnItemUsed;
         Exiled.Events.Handlers.Player.Dying += OnDying;
 
@@ -48,13 +51,27 @@ public abstract class CustomDrink : CustomItem
 
     protected override void UnsubscribeEvents()
     {
+        Exiled.Events.Handlers.Server.RoundEnded -= OnRoundEnded;
+        Exiled.Events.Handlers.Server.RestartingRound -= OnRestartingRound;
         Exiled.Events.Handlers.Player.UsedItem -= OnItemUsed;
         Exiled.Events.Handlers.Player.Dying -= OnDying;
 
         base.UnsubscribeEvents();
     }
 
-    private void OnItemUsed(UsedItemEventArgs ev)
+    protected void OnRoundEnded(RoundEndedEventArgs ev)
+    {
+        Log.Debug("Round ended: disabling custom drink effects on all players");
+        DisableAll();
+    }
+
+    protected void OnRestartingRound()
+    {
+        Log.Debug("Round restarting: disabling custom drink effects on all players");
+        DisableAll();
+    }
+
+    protected void OnItemUsed(UsedItemEventArgs ev)
     {
         // Disable effect when SCP-500 (red pill) is used
         if (ev.Item.Type == ItemType.SCP500)
@@ -83,15 +100,15 @@ public abstract class CustomDrink : CustomItem
         }
 
         bool consumed = Enable(ev.Player);
+        // TODO: Add RemoveOnUse to this conditional to support items that can be re-used
         if (consumed)
         {
             // TODO: This doesn't actually work yet, item is always removed. might be the base OnItemUsed is still removing it. Maybe give them a new one back or some shit
-            // TODO: Add RemoveOnUse to this conditional to support items that can be re-used
             ev.Player.RemoveItem(ev.Player.CurrentItem);
         }
     }
 
-    public void OnDying(DyingEventArgs ev)
+    protected void OnDying(DyingEventArgs ev)
     {
         Disable(ev.Player, died: true);
     }
@@ -121,7 +138,7 @@ public abstract class CustomDrink : CustomItem
     }
 
     // Call this with a reason selected when the drink's effect should be removed from a player
-    protected void Disable(Player player, bool expired = false, bool died = false, bool usedScp500 = false)
+    protected void Disable(Player player, bool expired = false, bool usedScp500 = false, bool died = false, bool roundEnded = false)
     {
         var affectedUserStatus = AffectedUserIds.Where(kvp => kvp.Key == player.UserId).FirstOrDefault();
         if (affectedUserStatus.Key != null)
@@ -145,15 +162,39 @@ public abstract class CustomDrink : CustomItem
             {
                 logMsg += " - duration expired";
             }
-            else if (died)
-            {
-                logMsg += " - player died";
-            }
             else if (usedScp500)
             {
                 logMsg += " - player used SCP-500";
             }
+            else if (died)
+            {
+                logMsg += " - player died";
+            }
+            else if (roundEnded)
+            {
+                logMsg += " - round ended";
+            }
             Log.Debug(logMsg);
+        }
+    }
+
+    // This should only be called when the round ends
+    protected void DisableAll()
+    {
+        // Disable() changes the collection, so compile a list of players first and then disable each
+        List<Player> playersToDisable = new();
+        foreach (var kvp in AffectedUserIds)
+        {
+            string userId = kvp.Key;
+            Player player = Player.List.Where(p => p.UserId == userId).FirstOrDefault();
+            if (player is not null)
+            {
+                playersToDisable.Add(player);
+            }
+        }
+        foreach (Player player in playersToDisable)
+        {
+            Disable(player, roundEnded: true);
         }
     }
 

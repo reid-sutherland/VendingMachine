@@ -113,27 +113,27 @@ public class CoinWithAString : CustomItem
     // Returns whether the coin should be removed
     public bool Use(Player player)
     {
-        bool removeCoin = true;
+        bool removeCoin;
         if (ItemUses.ContainsKey(player.CurrentItem.Serial))
         {
             if (ItemUses[player.CurrentItem.Serial] > 1)
             {
-                ItemUses[player.CurrentItem.Serial] -= 1;
                 removeCoin = false;
-                Log.Debug($"-- Player was holding a CWAS: uses left: {ItemUses[player.CurrentItem.Serial]}");
+                ItemUses[player.CurrentItem.Serial] -= 1;
+                Log.Debug($"-- uses left: {ItemUses[player.CurrentItem.Serial]}");
             }
             else
             {
                 removeCoin = true;
                 player.ShowHint($"Uh oh... the string broke!", 5.0f);
-                Log.Debug($"-- Player was holding a CWAS: that was the last use, removing");
+                Log.Debug($"-- no uses left: removing");
             }
         }
         else
         {
             // this shouldn't happen but if it does... they probably shouldn't have the coin lol
             removeCoin = true;
-            Log.Debug("!!! Player was holding a rogue CWAS");
+            Log.Error("!!! Player was holding a rogue CWAS");
         }
         return removeCoin;
     }

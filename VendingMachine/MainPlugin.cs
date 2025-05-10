@@ -4,9 +4,12 @@ using Exiled.API.Features;
 using Exiled.CustomItems.API.Features;
 using MEC;
 using System;
+using System.Collections.Generic;
 using System.IO;
+using System.Linq;
 using UnityEngine;
 using UserSettings.ServerSpecific;
+using VendingMachine.Utils;
 using Random = System.Random;
 
 namespace VendingMachine;
@@ -50,6 +53,12 @@ public class MainPlugin : Plugin<Config>
         ServerSpecificSettingsSync.ServerOnSettingValueReceived += OnSSInput;
         Exiled.Events.Handlers.Server.RoundStarted += Scp294.OnRoundStarted;
         Exiled.Events.Handlers.Server.RoundEnded += Scp294.OnRoundEnded;
+        Exiled.Events.Handlers.Server.RestartingRound += Scp294.OnRestartingRound;
+
+        // Load music for vending machine
+        Log.Info($"Loading SCP-294 audio clips from directory: {Scp294.AudioPath}");
+        AudioHelper.LoadAudioClip(Scp294.AudioPath, Scp294.AudioDispenseEffect);
+        AudioHelper.LoadAudioClips(Scp294.AudioPath, Scp294.AudioAmbient);
 
         // Register custom items here
         // Note: delay here is recommended so that all other plugins and components can load first
@@ -90,6 +99,7 @@ public class MainPlugin : Plugin<Config>
         ServerSpecificSettingsSync.ServerOnSettingValueReceived -= OnSSInput;
         Exiled.Events.Handlers.Server.RoundStarted -= Scp294.OnRoundStarted;
         Exiled.Events.Handlers.Server.RoundEnded -= Scp294.OnRoundEnded;
+        Exiled.Events.Handlers.Server.RestartingRound -= Scp294.OnRestartingRound;
 
         Singleton = null;
         Scp294 = null;

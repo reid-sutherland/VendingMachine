@@ -63,6 +63,7 @@ public class McDonaldsSprite : CustomDrink
 
     private void GiveHealth(Player player)
     {
+        // TODO: This might actually be too OP - I think HumeShield is the SCP shield and therefore it might regenerate? not sure
         var affectedUserStatus = AffectedUserIds.Where(kvp => kvp.Key == player.UserId).FirstOrDefault();
         var currentHealthGiven = AffectedUserCurrentHealthGiven.Where(kvp => kvp.Key == player.UserId).FirstOrDefault();
         if (affectedUserStatus.Key != null && currentHealthGiven.Key != null)
