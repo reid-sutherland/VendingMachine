@@ -1,6 +1,5 @@
 <?xml version="1.0" encoding="utf-8"?>
 <Project Sdk="Microsoft.NET.Sdk">
-
 	<PropertyGroup>
 		<OutputType>Library</OutputType>
 		<AssemblyName>VendingMachine</AssemblyName>
@@ -30,10 +29,9 @@
 	</ItemGroup>
 
 	<ItemGroup>
-		<Reference Include="AudioPlayerAPI" HintPath="$(EXILED_PLUGINS)\dependencies\AudioPlayerAPI.dll" Private="false" />
-		<Reference Include="AdvancedMERTools" HintPath="$(EXILED_PLUGINS)\AdvancedMERTools.dll" Private="false" />
-		<Reference Include="MapEditorReborn" HintPath="$(EXILED_PLUGINS)\MapEditorReborn.dll" Private="false" />
-		<Reference Include="YamlDotNet" HintPath="$(EXILED_REFERENCES)\YamlDotNet.dll" Private="false" />
+		<Reference Include="AudioPlayerApi" HintPath="$(EXILED_PLUGINS)\dependencies\AudioPlayerApi.dll" Private="false" />
+		<Reference Include="AdvancedMERTools" HintPath="$(EXILED_PLUGINS)\dependencies\AdvancedMERTools.dll" Private="false" />
+		<Reference Include="MapEditorReborn" HintPath="$(EXILED_PLUGINS)\dependencies\MapEditorReborn.dll" Private="false" />
 	</ItemGroup>
 
 	<ItemGroup>
@@ -46,6 +44,6 @@
 		<Reference Include="UnityEngine" HintPath="$(EXILED_REFERENCES)\UnityEngine.dll" Private="false" />
 		<Reference Include="UnityEngine.CoreModule" HintPath="$(EXILED_REFERENCES)\UnityEngine.CoreModule.dll" Private="false" />
 		<Reference Include="UnityEngine.PhysicsModule" HintPath="$(EXILED_REFERENCES)\UnityEngine.PhysicsModule.dll" Private="false" />
+		<Reference Include="YamlDotNet" HintPath="$(EXILED_REFERENCES)\YamlDotNet.dll" Private="false" />
 	</ItemGroup>
-
 </Project>
