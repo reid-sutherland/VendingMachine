@@ -96,17 +96,13 @@ public class CoinWithAString : CustomItem
 
     public void OnRoundStarted()
     {
+        Log.Debug($"Round started: spawning CoinWithAString");
         ItemUses = new();
-        if (SpawnProperties.Count() > 0)
+        foreach (int serial in TrackedSerials)
         {
-            Log.Info($"Round started: spawning CoinWithAString");
-            SpawnAll();
-            foreach (int serial in TrackedSerials)
-            {
-                ItemUses.Add(serial, StartingUses);
-            }
-            Log.Debug($"Spawned {TrackedSerials.Count} CoinWithAString's around the map");
+            ItemUses.Add(serial, StartingUses);
         }
+        Log.Info($"Spawned {TrackedSerials.Count} CoinWithAString's around the map");
     }
 
     // Use the item's serial to update the uses tracker

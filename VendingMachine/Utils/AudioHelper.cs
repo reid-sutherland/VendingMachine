@@ -1,7 +1,6 @@
 ﻿using System.IO;
 using System.Collections.Generic;
 using Exiled.API.Features;
-using MapEditorReborn.API.Features.Objects;
 using UnityEngine;
 
 namespace VendingMachine.Utils;
@@ -30,7 +29,7 @@ public static class AudioHelper
         }
     }
 
-    public static void PlayAudioClip(string audioPlayerName, string clip, MapEditorObject model)
+    public static void PlayAudioClip(string audioPlayerName, string clip, GameObject gameObject)
     {
         // TODO: When SCP294 starts spawning in random places, we should consider increasing the ambient range to make it easier to find
 
@@ -38,13 +37,13 @@ public static class AudioHelper
         AudioPlayer audioPlayer = AudioPlayer.CreateOrGet(audioPlayerName, onIntialCreation: (audioPlayer) =>
         {
             // Attach created audio player to player.
-            audioPlayer.transform.parent = model.transform;
+            audioPlayer.transform.parent = gameObject.transform;
 
             // This created speaker will be in 3D space.
             Speaker speaker = audioPlayer.AddSpeaker("Main", isSpatial: true, minDistance: 3.0f, maxDistance: 35.0f);
 
             // Attach created speaker to player.
-            speaker.transform.parent = model.transform;
+            speaker.transform.parent = gameObject.transform;
 
             // Set local positino to zero to make sure that speaker is in player.
             speaker.transform.localPosition = Vector3.zero;

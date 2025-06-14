@@ -2,8 +2,8 @@
 using Exiled.API.Features;
 using Exiled.CustomItems.API.Features;
 using Exiled.Events.EventArgs.Server;
-using MapEditorReborn.API.Features;
-using MapEditorReborn.API.Features.Objects;
+using ProjectMER.Features;
+using ProjectMER.Features.Objects;
 using MEC;
 using System;
 using System.Collections.Generic;
@@ -19,7 +19,7 @@ namespace VendingMachine;
 
 public class Scp294
 {
-    private MapEditorObject model = null;
+    private SchematicObject model = null;
 
     public static readonly string SchematicName = "SCP294";
 
@@ -33,7 +33,7 @@ public class Scp294
 
     public static readonly string AudioDispenseEffect = "DispenseDrink.ogg";
 
-    public static readonly List<string> AudioAmbient = new() { "cod-quick-revive.ogg", "cod-speed-cola.ogg", "cod-juggernog-soda.ogg", "nipper-house.ogg" };
+    public static readonly List<string> AudioAmbient = new() { "cod-quick-revive.ogg", "cod-speed-cola.ogg", "cod-juggernog-soda.ogg", "nipper-house-trimmed.ogg" };
 
     public uint DrawerCount { get; private set; } = 0;
 
@@ -57,10 +57,10 @@ public class Scp294
             Log.Debug($"Adding local rotation offset {rotationOffset} to room euler rotation: {room.Rotation.eulerAngles}");
             Quaternion rotation = Quaternion.Euler(room.Rotation.eulerAngles + rotationOffset);
 
-            model = ObjectSpawner.SpawnSchematic(SchematicName, position, rotation, null, MapUtils.GetSchematicDataByName(SchematicName));
+            model = ObjectSpawner.SpawnSchematic(SchematicName, position, rotation);
             if (model is not null)
             {
-                Log.Info($"Vending machine spawned in room: {model.CurrentRoom}");
+                Log.Info($"Vending machine spawned in room: {room}");
                 Log.Debug($"-- model position: {model.Position} - model euler rotation: {model.Rotation.eulerAngles}");
 
                 // Play ambient music indefinitely
@@ -70,6 +70,24 @@ public class Scp294
             {
                 Log.Error($"Model with schematic name {SchematicName} failed to spawn!");
             }
+
+            // Register events to the AMERT Interactable Objects - delay to make sure they load firstwd
+            Timing.CallDelayed(2.0f, () =>
+            {
+                Log.Debug($"Registering handlers to AMERT IOs");
+                foreach (var io in AdvancedMERTools.AdvancedMERTools.Singleton.InteractableObjects)
+                {
+                    Log.Debug($"-- found AMERT InteractableObject: {io.gameObject.name}");
+                    if (io.gameObject.name == "SCP294ControlPanel")
+                    {
+                        io.PlayerIOInteracted += OnControlPanelInteracted;
+                    }
+                    else if (io.gameObject.name == "SCP294Drawer")
+                    {
+                        io.PlayerIOInteracted += OnDrawerInteracted;
+                    }
+                }
+            });
         }
         catch (Exception ex)
         {
@@ -82,6 +100,19 @@ public class Scp294
     public void OnRoundEnded(RoundEndedEventArgs ev)
     {
         Log.Debug("Round ended");
+        // clear AMERT IO events
+        foreach (var io in AdvancedMERTools.AdvancedMERTools.Singleton.InteractableObjects)
+        {
+            if (io.gameObject.name == "SCP294ControlPanel")
+            {
+                io.PlayerIOInteracted -= OnControlPanelInteracted;
+            }
+            else if (io.gameObject.name == "SCP294Drawer")
+            {
+                io.PlayerIOInteracted -= OnDrawerInteracted;
+            }
+        }
+        // clean up vending machine
         Timing.KillCoroutines(ambientAudioHandle);
         model?.Destroy();
         model = null;
@@ -90,17 +121,31 @@ public class Scp294
     public void OnRestartingRound()
     {
         Log.Debug("Restarting round");
+        // clear AMERT IO events
+        foreach (var io in AdvancedMERTools.AdvancedMERTools.Singleton.InteractableObjects)
+        {
+            if (io.gameObject.name == "SCP294ControlPanel")
+            {
+                io.PlayerIOInteracted -= OnControlPanelInteracted;
+            }
+            else if (io.gameObject.name == "SCP294Drawer")
+            {
+                io.PlayerIOInteracted -= OnDrawerInteracted;
+            }
+        }
+        // clean up vending machine
         Timing.KillCoroutines(ambientAudioHandle);
         model?.Destroy();
         model = null;
     }
 
-    public void OnControlPanelInteracted(Player player)
+    public void OnControlPanelInteracted(AdvancedMERTools.InteractableObject.PlayerIOInteractedEventArgs ev)
     {
         if (model is null)
         {
             return;
         }
+        Player player = ev.Player;
 
         try
         {
@@ -177,12 +222,13 @@ public class Scp294
         }
     }
 
-    public void OnDrawerInteracted(Player player)
+    public void OnDrawerInteracted(AdvancedMERTools.InteractableObject.PlayerIOInteractedEventArgs ev)
     {
         if (model is null)
         {
             return;
         }
+        Player player = ev.Player;
 
         try
         {
@@ -214,7 +260,7 @@ public class Scp294
     private void DispenseDrink()
     {
         DrawerCount++;
-        AudioHelper.PlayAudioClip(AudioPlayerName, AudioDispenseEffect, model);
+        AudioHelper.PlayAudioClip(AudioPlayerName, AudioDispenseEffect, model.gameObject);
     }
 
     private bool GiveRandomDrink(Player player)
@@ -271,7 +317,7 @@ public class Scp294
         {
             int rand = MainPlugin.Random.Next(AudioAmbient.Count);
             string clip = AudioAmbient[rand];
-            AudioHelper.PlayAudioClip(AudioPlayerName, clip, model);
+            AudioHelper.PlayAudioClip(AudioPlayerName, clip, model.gameObject);
 
             // Note: Each song is currently about 30s
             int waitTime = MainPlugin.Random.Next(60, 120);
@@ -289,7 +335,6 @@ public class Scp294
         {
             if (Room.Get(kvp.Key) is not null)
             {
-                Log.Info($"SpawnPoint with RoomType {kvp.Key} was selected");
                 return kvp;
             }
             else
