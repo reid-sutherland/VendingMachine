@@ -98,6 +98,15 @@ public abstract class CustomDrink : CustomItem
             Log.Warn($"{ev.Player.Nickname} used a custom item with unexpected ItemType: {Type}");
             Log.Warn($"Effects of custom item may stack with the root ItemType's effect");
         }
+        // Log if effects weren't cleared correctly in case it happens on a monkey's server
+        if (ev.Item.Type == ItemType.SCP207 && ev.Player.TryGetEffect(EffectType.Scp207, out var scp207Effect) && scp207Effect.IsEnabled)
+        {
+            Log.Error($"-- player is STILL affected by Scp207");
+        }
+        if (ev.Item.Type == ItemType.AntiSCP207 && ev.Player.TryGetEffect(EffectType.AntiScp207, out var antiScp207Effect) && antiScp207Effect.IsEnabled)
+        {
+            Log.Error($"-- player is STILL affected by AntiScp207");
+        }
 
         bool consumed = Enable(ev.Player);
         // TODO: Add RemoveOnUse to this conditional to support items that can be re-used

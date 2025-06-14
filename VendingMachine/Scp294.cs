@@ -272,7 +272,10 @@ public class Scp294
 
         Log.Info($"Giving random drink to player: {player.Nickname}");
         int roll = RollHelper.RollChanceFromConfig(MainPlugin.Configs);
-        Log.Debug($"-- true roll: {roll}");
+        if (MainPlugin.Configs.RollDebug)
+        {
+            Log.Debug($"-- true roll: {roll}");
+        }
 
         bool success = false;
         foreach (PropertyInfo pInfo in MainPlugin.Configs.GetType().GetProperties())
@@ -282,10 +285,16 @@ public class Scp294
                 var randomDrink = pInfo.GetValue(MainPlugin.Configs) as CustomDrink;
                 if (randomDrink is not null)
                 {
-                    Log.Debug($"-- current roll: {roll} - current chance: {randomDrink.Chance} for drink: {randomDrink.Name}");
+                    if (MainPlugin.Configs.RollDebug)
+                    {
+                        Log.Debug($"-- current roll: {roll} - current chance: {randomDrink.Chance} for drink: {randomDrink.Name}");
+                    }
                     if (roll <= randomDrink.Chance)
                     {
-                        Log.Debug($"-- success: giving {randomDrink.Name} to player: {player.Nickname}");
+                        if (MainPlugin.Configs.RollDebug)
+                        {
+                            Log.Debug($"-- success: giving {randomDrink.Name} to player: {player.Nickname}");
+                        }
                         randomDrink.Give(player);
                         success = true;
                         break;

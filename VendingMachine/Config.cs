@@ -13,13 +13,14 @@ public sealed class Config : IConfig
     [Description("Whether the vending machine (SCP-294) should be enabled and spawn in the map.")]
     public bool IsEnabled { get; set; } = true;
 
+    [Description("Whether debug logs will show in the console.")]
     public bool Debug { get; set; } = false;
 
-    [Description("Whether AudioAPI routines will write logs to debug.")]
+    [Description("Whether debug logs from AudioAPI routines show.")]
     public bool AudioDebug { get; set; } = false;
 
-    [Description("Whether AMERT interaction will log things like distance to interactable schematics.")]
-    public bool AmertDebug { get; set; } = false;
+    [Description("Whether debug logs from random chance rolls will show.")]
+    public bool RollDebug { get; set; } = false;
 
     [Description("Whether or not probabilities should be additive (50 + 50 = 100) or not (50 + 50 = 2 seperate 50% chances).")]
     public bool AdditiveProbabilities { get; set; } = true;
