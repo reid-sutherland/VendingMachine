@@ -3,7 +3,7 @@ using Exiled.API.Features.Pools;
 using VoiceChat.Codec;
 using VoiceChat.Codec.Enums;
 
-namespace VendingMachine.Utils.Voice;
+namespace VendingMachine.VoiceUtils;
 
 public class OpusEncoderPool : IPool<OpusEncoder>
 {

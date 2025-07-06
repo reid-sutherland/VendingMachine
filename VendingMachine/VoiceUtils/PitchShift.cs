@@ -1,6 +1,6 @@
 ﻿using System;
 
-namespace VendingMachine.Utils.Voice;
+namespace VendingMachine.VoiceUtils;
 
 public class PitchShifter
 {

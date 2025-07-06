@@ -2,7 +2,7 @@
 using VoiceChat.Codec;
 using VoiceChat.Networking;
 
-namespace VendingMachine.Utils.Voice;
+namespace VendingMachine.VoiceUtils;
 
 public class VoicePitchUtilities
 {

@@ -1,4 +1,5 @@
-﻿using Exiled.API.Enums;
+﻿using CommonUtils.Core;
+using Exiled.API.Enums;
 using Exiled.API.Features;
 using Exiled.CustomItems.API.Features;
 using Exiled.Events.EventArgs.Server;
@@ -9,33 +10,34 @@ using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
-using System.Reflection;
 using UnityEngine;
-
 using VendingMachine.Drinks;
-using VendingMachine.Utils;
 
 namespace VendingMachine;
 
 public class Scp294
 {
+    public static readonly string Identifier = "SCP-294";
+
     private SchematicObject model = null;
 
     public static readonly string SchematicName = "SCP294";
 
-    public const string ControlPanelName = "SCP294ControlPanel";
+    public static readonly string ControlPanelName = "SCP294ControlPanel";
 
-    public const string DrawerName = "SCP294Drawer";
+    public static readonly string DrawerName = "SCP294Drawer";
 
-    public string AudioPath => Path.Combine(Paths.Exiled, "Audio", "SCP294");
+    public AudioPlayer AudioPlayer { get; set; }
 
-    public string AudioPlayerName => GetType().Name;
+    public string AudioPath => Path.Combine(Paths.Exiled, "Audio", Identifier);
 
-    public static readonly string AudioDispenseEffect = "DispenseDrink.ogg";
+    public static readonly string DispenseEffectAudio = "dispense-drink.ogg";
 
-    public static readonly List<string> AudioAmbient = new() { "cod-quick-revive.ogg", "cod-speed-cola.ogg", "cod-juggernog-soda.ogg", "nipper-house-trimmed.ogg" };
+    public static readonly List<string> AmbientAudio = new() { "cod-quick-revive.ogg", "cod-speed-cola.ogg", "cod-juggernog-soda.ogg", "nipper-house-trimmed.ogg" };
 
     public uint DrawerCount { get; private set; } = 0;
+
+    private Config Config => MainPlugin.Configs;
 
     private DateTime LastSkimTime { get; set; } = DateTime.Now;
 
@@ -46,32 +48,51 @@ public class Scp294
         Log.Debug("Round started: spawning vending machine");
         var spawn = GetRandomSpawnPoint();
         RoomType roomType = spawn.Key;
-        Vector3 positionOffset = spawn.Value.Item1;
-        Vector3 rotationOffset = spawn.Value.Item2;
-        Log.Debug($"Randomly selected room: {roomType}");
+        Vector3 localPosition = spawn.Value.Item1;
+        Vector3 localRotation = spawn.Value.Item2;
+
+        Room room = Room.Get(roomType);
+        Vector3 position = room.WorldPosition(localPosition);
+        Quaternion rotation = Quaternion.Euler(room.Rotation.eulerAngles + localRotation);
+        Log.Debug($"-- randomly selected room: {roomType}");
+        Log.Debug($"-- added local position offset {localPosition} to room position {room.Position} => {position}");
+        Log.Debug($"-- added local rotation offset {localRotation} to room euler rotation {room.Rotation.eulerAngles} => {rotation}");
+
         try
         {
-            Room room = Room.Get(roomType);
-            Log.Debug($"Adding local position offset {positionOffset} to room position: {room.Position}");
-            Vector3 position = room.WorldPosition(positionOffset);
-            Log.Debug($"Adding local rotation offset {rotationOffset} to room euler rotation: {room.Rotation.eulerAngles}");
-            Quaternion rotation = Quaternion.Euler(room.Rotation.eulerAngles + rotationOffset);
-
             model = ObjectSpawner.SpawnSchematic(SchematicName, position, rotation);
-            if (model is not null)
+            if (model is null)
             {
-                Log.Info($"Vending machine spawned in room: {room}");
-                Log.Debug($"-- model position: {model.Position} - model euler rotation: {model.Rotation.eulerAngles}");
+                Log.Error($"Model with schematic name {SchematicName} failed to spawn!");
+                return;
+            }
+
+            Log.Info($"Vending machine spawned in room: {room}");
+            Log.Debug($"-- model position: {model.Position} - model euler rotation: {model.Rotation.eulerAngles}");
+
+            // Create the AudioPlayer for ambient music and sound effects
+            AudioPlayer = AudioHelper.GetAudioPlayer(
+                $"{Identifier}-AP",
+                parent: model.gameObject,
+                speakerVolume: 1.0f,
+                speakerCount: 1,
+                minDistance: 3.0f,
+                maxDistance: 35.0f,
+                log: Config.AudioDebug
+            );
+            if (AudioPlayer is not null)
+            {
+                Log.Info($"Created audio player for spawned {Identifier} with name: {AudioPlayer.Name}");
 
                 // Play ambient music indefinitely
                 ambientAudioHandle = Timing.RunCoroutine(AmbientAudioCoroutine());
             }
             else
             {
-                Log.Error($"Model with schematic name {SchematicName} failed to spawn!");
+                Log.Error($"Failed to create audio player for spawned {Identifier}");
             }
 
-            // Register events to the AMERT Interactable Objects - delay to make sure they load firstwd
+            // Register events to the AMERT Interactable Objects - delay to make sure they load first
             Timing.CallDelayed(2.0f, () =>
             {
                 Log.Debug($"Registering handlers to AMERT IOs");
@@ -158,10 +179,11 @@ public class Scp294
             {
                 Log.Debug("-- player was holding nothing");
             }
-            else if (MainPlugin.Configs.SkimmingEnabled && player.CurrentItem.IsKeycard && player.CurrentItem.Type != ItemType.KeycardGuard)
+            else if (Config.SkimmingEnabled && player.CurrentItem.IsKeycard && player.CurrentItem.Type != ItemType.KeycardGuard)
             {
+                // keycard skimming
                 DateTime now = DateTime.Now;
-                if (now - LastSkimTime >= TimeSpan.FromSeconds(MainPlugin.Configs.SkimmingCooldown))
+                if (now - LastSkimTime >= TimeSpan.FromSeconds(Config.SkimmingCooldown))
                 {
                     int rand = MainPlugin.Random.Next(2);
                     if (rand > 0)
@@ -177,7 +199,7 @@ public class Scp294
                         // TODO: Figure out how to make this "belong" to the player so it can't friendly fire
                         var grenadeItem = (Exiled.API.Features.Items.ExplosiveGrenade)Exiled.API.Features.Items.Item.Create(ItemType.GrenadeHE);
                         grenadeItem.FuseTime = 0.5f;
-                        grenadeItem.FuseTime = MainPlugin.Configs.GrenadeFuseTime;
+                        grenadeItem.FuseTime = Config.GrenadeFuseTime;
                         var grenade = grenadeItem.SpawnActive(player.Position);
                     }
                 }
@@ -194,7 +216,7 @@ public class Scp294
             else
             {
                 bool removeCoin = true;
-                if (MainPlugin.Configs.CoinWithAString.Check(player))
+                if (Config.CoinWithAString.Check(player))
                 {
                     Log.Debug($"-- player was holding a CWAS - dispensing drink");
                     bool check = CustomItem.TryGet(player, out CustomItem customItem);
@@ -218,7 +240,7 @@ public class Scp294
         }
         catch (Exception ex)
         {
-            Log.Error($"Oh fuck there's an exception: {ex}");
+            Log.Error($"{nameof(OnControlPanelInteracted)} Exception: {ex}");
         }
     }
 
@@ -238,14 +260,14 @@ public class Scp294
                 Log.Debug("-- player was SCP");
                 return;
             }
-            if (player.IsInventoryFull)
-            {
-                Log.Debug("-- player's inventory is full");
-                return;
-            }
             if (DrawerCount == 0)
             {
                 Log.Debug("-- drawer is empty");
+                return;
+            }
+            if (player.IsInventoryFull)
+            {
+                Log.Debug("-- player's inventory is full");
                 return;
             }
 
@@ -253,14 +275,17 @@ public class Scp294
         }
         catch (Exception ex)
         {
-            Log.Error($"Oh fuck there's an exception: {ex}");
+            Log.Error($"{nameof(OnDrawerInteracted)} Exception: {ex}");
         }
     }
 
     private void DispenseDrink()
     {
         DrawerCount++;
-        AudioHelper.PlayAudioClip(AudioPlayerName, AudioDispenseEffect, model.gameObject);
+        if (AudioPlayer is not null)
+        {
+            AudioPlayer.AddClip(DispenseEffectAudio.Replace(".ogg", ""));
+        }
     }
 
     private bool GiveRandomDrink(Player player)
@@ -270,48 +295,30 @@ public class Scp294
             return false;
         }
 
-        Log.Info($"Giving random drink to player: {player.Nickname}");
-        int roll = RollHelper.RollChanceFromConfig(MainPlugin.Configs);
-        if (MainPlugin.Configs.RollDebug)
-        {
-            Log.Debug($"-- true roll: {roll}");
-        }
-
         bool success = false;
-        foreach (PropertyInfo pInfo in MainPlugin.Configs.GetType().GetProperties())
+        int roll = ChanceHelper.RollChance(MainPlugin.CustomDrinkList, additiveProbabilities: Config.AdditiveProbabilities);
+        Log.Debug($"-- random drink roll: {roll}");
+        foreach (CustomDrink randomDrink in MainPlugin.CustomDrinkList)
         {
-            if (typeof(CustomDrink).IsAssignableFrom(pInfo.PropertyType))
+            Log.Debug($"-- current roll: {roll} with chance: {randomDrink.Chance} for drink: {randomDrink.Name}", print: Config.RollDebug);
+            if (roll <= randomDrink.Chance)
             {
-                var randomDrink = pInfo.GetValue(MainPlugin.Configs) as CustomDrink;
-                if (randomDrink is not null)
-                {
-                    if (MainPlugin.Configs.RollDebug)
-                    {
-                        Log.Debug($"-- current roll: {roll} - current chance: {randomDrink.Chance} for drink: {randomDrink.Name}");
-                    }
-                    if (roll <= randomDrink.Chance)
-                    {
-                        if (MainPlugin.Configs.RollDebug)
-                        {
-                            Log.Debug($"-- success: giving {randomDrink.Name} to player: {player.Nickname}");
-                        }
-                        randomDrink.Give(player);
-                        success = true;
-                        break;
-                    }
-
-                    if (MainPlugin.Configs.AdditiveProbabilities)
-                    {
-                        roll -= randomDrink.Chance;
-                    }
-                }
+                Log.Info($"Giving random drink {randomDrink.Name} to player: {player.Nickname}");
+                randomDrink.Give(player);
+                success = true;
+                break;
+            }
+            if (Config.AdditiveProbabilities)
+            {
+                roll -= randomDrink.Chance;
             }
         }
+
         if (success)
         {
             // TODO: Play a sound for the drawer
             DrawerCount--;
-            Log.Debug($"-- {DrawerCount} drinks left in the drawer");
+            Log.Debug($"Drinks left in the drawer: {DrawerCount}");
         }
         else
         {
@@ -324,12 +331,20 @@ public class Scp294
     {
         for (; ; )
         {
-            int rand = MainPlugin.Random.Next(AudioAmbient.Count);
-            string clip = AudioAmbient[rand];
-            AudioHelper.PlayAudioClip(AudioPlayerName, clip, model.gameObject);
+            if (AmbientAudio.TryGetRandomItem(out string clip) && AudioPlayer is not null)
+            {
+                clip = clip.Replace(".ogg", "");
+                AudioPlayer.AddClip(clip);
+                Log.Debug($"Added random ambient audio clip '{clip}' to {AudioPlayer.Name}", print: Config.AudioDebug);
+            }
+            else
+            {
+                Log.Debug($"Failed to get random ambient audio clip", print: Config.AudioDebug);
+            }
 
             // Note: Each song is currently about 30s
             int waitTime = MainPlugin.Random.Next(60, 120);
+            Log.Debug($"Waiting {waitTime} seconds before playing next ambient audio clip", print: Config.AudioDebug);
             yield return Timing.WaitForSeconds(waitTime);
         }
     }
@@ -354,11 +369,11 @@ public class Scp294
         throw new Exception("None of the SpawnPoints for vending machine exist on the map");
     }
 
+#pragma warning disable SA1025  // Code should not contain multiple whitespace characters in a row.
     // TODO: Move this to Config.SpawnPoints
     // Tuple values are <offset, rotation> where rotation is the euler angles of the Quaternion
     private static readonly Dictionary<RoomType, Tuple<Vector3, Vector3>> SpawnPoints = new()
     {
-#pragma warning disable SA1025  // Code should not contain multiple whitespace characters in a row.
         [RoomType.EzIntercom] =             Tuple.Create(new Vector3(-0.176f, 0.547f, -4.437f), new Vector3(0.0f, -90.0f, 0.0f)),
         //[RoomType.EzCurve] =                Tuple.Create(new Vector3(0.894f, 0.565f, 1.638f), new Vector3(0.0f, 225.0f, 0.0f)),    // this works when room rotation is (0, 0, 0, -1)
         //[RoomType.EzCheckpointHallwayA] =   Tuple.Create(new Vector3(0.0f, 0.0f, 0.0f), new Vector3(0.0f, 0.0f, 0.0f)),
@@ -370,6 +385,6 @@ public class Scp294
         //[RoomType.EzSmallrooms] =           Tuple.Create(new Vector3(0.0f, 0.0f, 0.0f), new Vector3(0.0f, 0.0f, 0.0f)),
         //[RoomType.EzGateA] =                Tuple.Create(new Vector3(2.834f, 0.553f, -3.926f), new Vector3(0.0f, 90.0f, 0.0f)),
         //[RoomType.EzGateB] =                Tuple.Create(new Vector3(0.0f, 0.0f, 0.0f), new Vector3(0.0f, 0.0f, 0.0f)),
-#pragma warning restore SA1025
     };
+#pragma warning restore SA1025
 }

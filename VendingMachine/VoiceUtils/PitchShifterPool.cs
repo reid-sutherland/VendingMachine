@@ -1,7 +1,7 @@
 ﻿using System.Collections.Concurrent;
 using Exiled.API.Features.Pools;
 
-namespace VendingMachine.Utils.Voice;
+namespace VendingMachine.VoiceUtils;
 
 public class PitchShifterPool : IPool<PitchShifter>
 {

@@ -1,5 +1,5 @@
-﻿using Exiled.API.Enums;
-using Exiled.API.Features;
+﻿using CommonUtils.Core.Interfaces;
+using Exiled.API.Enums;
 using Exiled.API.Features.Spawn;
 using Exiled.CustomItems.API.Features;
 using Exiled.Events.EventArgs.Player;
@@ -14,7 +14,7 @@ using Player = Exiled.API.Features.Player;
 
 namespace VendingMachine.Drinks;
 
-public abstract class CustomDrink : CustomItem
+public abstract class CustomDrink : CustomItem, IChanceObject
 {
     // These are defined here so that the config doesn't try to mess with them
     [YamlIgnore]
@@ -27,17 +27,17 @@ public abstract class CustomDrink : CustomItem
     [YamlIgnore]
     public override SpawnProperties SpawnProperties { get; set; } = new();
 
+    // Each drink should use this to track players that are actively affected by the drink
+    [YamlIgnore]
+    protected Dictionary<string, bool> AffectedUserIds { get; set; } = new();
+
     // This should ONLY be defined in the config
     [Description("The chance that the drink is dispensed.")]
-    public int Chance { get; set; }
+    public int Chance { get; set; } = 10;
 
     // This should be overrided to set a code-defined default duration per drink
     [Description("How long the drink's effects lasts for. A value of 0 means infinite.")]
     public virtual float Duration { get; set; } = 180.0f;
-
-    // Each drink should use this to track players that are actively affected by the drink
-    [YamlIgnore]
-    protected Dictionary<string, bool> AffectedUserIds { get; set; } = new();
 
     protected override void SubscribeEvents()
     {

@@ -1,4 +1,5 @@
-﻿using Exiled.API.Enums;
+﻿using CommonUtils.Core;
+using Exiled.API.Enums;
 using Exiled.API.Features;
 using Exiled.API.Features.Attributes;
 using Exiled.CustomItems.API.Features;
@@ -6,8 +7,6 @@ using System.Collections.Generic;
 using System.ComponentModel;
 using System.Linq;
 using YamlDotNet.Serialization;
-
-using VendingMachine.Utils;
 
 namespace VendingMachine.Drinks;
 
@@ -50,14 +49,14 @@ public class RandomRootbeer : CustomDrink
 
     protected override void EnableEffects(Player player)
     {
-        int roll = RollHelper.RollChanceFromCollection(EffectChances.Values);
-        Log.Debug($"RandomRootbeer: rolled: {roll}");
+        int roll = ChanceHelper.RollChanceFromChances(EffectChances.Values);
+        Log.Debug($"-- {nameof(RandomRootbeer)} roll: {roll}");
         foreach (var kvp in EffectChances)
         {
             EffectType effect = kvp.Key;
             int chance = kvp.Value;
-            Log.Debug($"-- current roll: {roll} - current chance: {chance} for effect: {effect}");
 
+            Log.Debug($"-- current roll: {roll} with chance: {chance} for effect: {effect}", print: MainPlugin.Configs.RollDebug);
             if (roll <= chance)
             {
                 AffectedUserEffects.Add(player.UserId, effect);
@@ -66,7 +65,6 @@ public class RandomRootbeer : CustomDrink
                 Log.Info($"{Name} random effect for player {player.Nickname}: temporary {effect}");
                 break;
             }
-
             if (MainPlugin.Configs.AdditiveProbabilities)
             {
                 roll -= chance;

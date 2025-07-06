@@ -16,7 +16,7 @@ public sealed class Config : IConfig
     [Description("Whether debug logs will show in the console.")]
     public bool Debug { get; set; } = false;
 
-    [Description("Whether debug logs from AudioAPI routines show.")]
+    [Description("Whether debug logs from AudioPlayerAPI routines show.")]
     public bool AudioDebug { get; set; } = false;
 
     [Description("Whether debug logs from random chance rolls will show.")]

@@ -27,6 +27,7 @@
 		<Reference Include="AdvancedMERTools" HintPath="$(LABAPI_PLUGINS)\AdvancedMERTools.dll" Private="false" />
 		
 		<Reference Include="AudioPlayerApi" HintPath="$(EXILED_PLUGINS)\dependencies\AudioPlayerApi.dll" Private="false" />
+		<Reference Include="CommonUtils.Core" HintPath="$(EXILED_PLUGINS)\dependencies\CommonUtils.Core.dll" Private="false" />
 	</ItemGroup>
 
 	<ItemGroup>

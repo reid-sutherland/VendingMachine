@@ -3,10 +3,8 @@ using Exiled.API.Features.Attributes;
 using Exiled.CustomItems.API.Features;
 using Exiled.Events.EventArgs.Player;
 using System.ComponentModel;
-using System.Linq;
 using YamlDotNet.Serialization;
-
-using VendingMachine.Utils.Voice;
+using VendingMachine.VoiceUtils;
 
 namespace VendingMachine.Drinks;
 
