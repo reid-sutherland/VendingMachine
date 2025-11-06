@@ -99,17 +99,13 @@ public class Scp294
             Timing.CallDelayed(2.0f, () =>
             {
                 Log.Debug($"Registering handlers to AMERT IOs");
+                AdvancedMERTools.Events.Handlers.InteractableObjectEventHandlers.InteractableObjectInteracted += OnControlPanelInteracted;
+                AdvancedMERTools.Events.Handlers.InteractableObjectEventHandlers.InteractableObjectInteracted += OnDrawerInteracted;
+
+                // leave this in for sanity checking
                 foreach (var io in AdvancedMERTools.AdvancedMERTools.Singleton.InteractableObjects)
                 {
                     Log.Debug($"-- found AMERT InteractableObject: {io.gameObject.name}");
-                    if (io.gameObject.name.Contains(ControlPanelName))
-                    {
-                        io.PlayerIOInteracted += OnControlPanelInteracted;
-                    }
-                    else if (io.gameObject.name.Contains(DrawerName))
-                    {
-                        io.PlayerIOInteracted += OnDrawerInteracted;
-                    }
                 }
             });
         }
@@ -125,17 +121,8 @@ public class Scp294
     {
         Log.Debug("Round ended");
         // clear AMERT IO events
-        foreach (var io in AdvancedMERTools.AdvancedMERTools.Singleton.InteractableObjects)
-        {
-            if (io.gameObject.name.Contains(ControlPanelName))
-            {
-                io.PlayerIOInteracted -= OnControlPanelInteracted;
-            }
-            else if (io.gameObject.name.Contains(DrawerName))
-            {
-                io.PlayerIOInteracted -= OnDrawerInteracted;
-            }
-        }
+        AdvancedMERTools.Events.Handlers.InteractableObjectEventHandlers.InteractableObjectInteracted -= OnControlPanelInteracted;
+        AdvancedMERTools.Events.Handlers.InteractableObjectEventHandlers.InteractableObjectInteracted -= OnDrawerInteracted;
         // clean up vending machine
         Timing.KillCoroutines(ambientAudioHandle);
         model?.Destroy();
@@ -146,26 +133,21 @@ public class Scp294
     {
         Log.Debug("Restarting round");
         // clear AMERT IO events
-        foreach (var io in AdvancedMERTools.AdvancedMERTools.Singleton.InteractableObjects)
-        {
-            if (io.gameObject.name.Contains(ControlPanelName))
-            {
-                io.PlayerIOInteracted -= OnControlPanelInteracted;
-            }
-            else if (io.gameObject.name.Contains(DrawerName))
-            {
-                io.PlayerIOInteracted -= OnDrawerInteracted;
-            }
-        }
+        AdvancedMERTools.Events.Handlers.InteractableObjectEventHandlers.InteractableObjectInteracted -= OnControlPanelInteracted;
+        AdvancedMERTools.Events.Handlers.InteractableObjectEventHandlers.InteractableObjectInteracted -= OnDrawerInteracted;
         // clean up vending machine
         Timing.KillCoroutines(ambientAudioHandle);
         model?.Destroy();
         model = null;
     }
 
-    public void OnControlPanelInteracted(AdvancedMERTools.InteractableObject.PlayerIOInteractedEventArgs ev)
+    public void OnControlPanelInteracted(AdvancedMERTools.Events.Arguments.InteractableObjectInteractedEventArgs ev)
     {
         if (model is null)
+        {
+            return;
+        }
+        if (!ev.ObjectName.Contains(ControlPanelName))
         {
             return;
         }
@@ -247,9 +229,13 @@ public class Scp294
         }
     }
 
-    public void OnDrawerInteracted(AdvancedMERTools.InteractableObject.PlayerIOInteractedEventArgs ev)
+    public void OnDrawerInteracted(AdvancedMERTools.Events.Arguments.InteractableObjectInteractedEventArgs ev)
     {
         if (model is null)
+        {
+            return;
+        }
+        if (!ev.ObjectName.Contains(DrawerName))
         {
             return;
         }
