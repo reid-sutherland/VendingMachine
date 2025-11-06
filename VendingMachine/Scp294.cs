@@ -19,27 +19,27 @@ public class Scp294
 {
     public static readonly string Identifier = "SCP-294";
 
-    private SchematicObject model = null;
-
     public static readonly string SchematicName = "SCP294";
 
-    public static readonly string ControlPanelName = "SCP294ControlPanel";
+    public static readonly string ControlPanelName = "ControlPanel";
 
-    public static readonly string DrawerName = "SCP294Drawer";
-
-    public AudioPlayer AudioPlayer { get; set; }
+    public static readonly string DrawerName = "Drawer";
 
     public string AudioPath => Path.Combine(Paths.Exiled, "Audio", Identifier);
 
-    public static readonly string DispenseEffectAudio = "dispense-drink.ogg";
+    public static readonly string DispenseEffectAudio = "dispense-drink";
 
-    public static readonly List<string> AmbientAudio = new() { "cod-quick-revive.ogg", "cod-speed-cola.ogg", "cod-juggernog-soda.ogg", "nipper-house-trimmed.ogg" };
+    public static readonly List<string> AmbientAudio = new() { "cod-quick-revive", "cod-speed-cola", "cod-juggernog-soda", "nipper-house-trimmed" };
+
+    public AudioPlayer AudioPlayer { get; set; } = null;
 
     public uint DrawerCount { get; private set; } = 0;
 
     private Config Config => MainPlugin.Configs;
 
     private DateTime LastSkimTime { get; set; } = DateTime.Now;
+
+    private SchematicObject model = null;
 
     private CoroutineHandle ambientAudioHandle;
 
@@ -77,15 +77,18 @@ public class Scp294
                 speakerVolume: 1.0f,
                 speakerCount: 1,
                 minDistance: 3.0f,
-                maxDistance: 35.0f,
+                maxDistance: 30.0f,
                 log: Config.AudioDebug
             );
             if (AudioPlayer is not null)
             {
                 Log.Info($"Created audio player for spawned {Identifier} with name: {AudioPlayer.Name}");
 
-                // Play ambient music indefinitely
-                ambientAudioHandle = Timing.RunCoroutine(AmbientAudioCoroutine());
+                if (Config.AmbientAudioEnabled)
+                {
+                    // Play ambient music indefinitely
+                    ambientAudioHandle = Timing.RunCoroutine(AmbientAudioCoroutine());
+                }
             }
             else
             {
@@ -99,11 +102,11 @@ public class Scp294
                 foreach (var io in AdvancedMERTools.AdvancedMERTools.Singleton.InteractableObjects)
                 {
                     Log.Debug($"-- found AMERT InteractableObject: {io.gameObject.name}");
-                    if (io.gameObject.name == "SCP294ControlPanel")
+                    if (io.gameObject.name.Contains(ControlPanelName))
                     {
                         io.PlayerIOInteracted += OnControlPanelInteracted;
                     }
-                    else if (io.gameObject.name == "SCP294Drawer")
+                    else if (io.gameObject.name.Contains(DrawerName))
                     {
                         io.PlayerIOInteracted += OnDrawerInteracted;
                     }
@@ -124,11 +127,11 @@ public class Scp294
         // clear AMERT IO events
         foreach (var io in AdvancedMERTools.AdvancedMERTools.Singleton.InteractableObjects)
         {
-            if (io.gameObject.name == "SCP294ControlPanel")
+            if (io.gameObject.name.Contains(ControlPanelName))
             {
                 io.PlayerIOInteracted -= OnControlPanelInteracted;
             }
-            else if (io.gameObject.name == "SCP294Drawer")
+            else if (io.gameObject.name.Contains(DrawerName))
             {
                 io.PlayerIOInteracted -= OnDrawerInteracted;
             }
@@ -145,11 +148,11 @@ public class Scp294
         // clear AMERT IO events
         foreach (var io in AdvancedMERTools.AdvancedMERTools.Singleton.InteractableObjects)
         {
-            if (io.gameObject.name == "SCP294ControlPanel")
+            if (io.gameObject.name.Contains(ControlPanelName))
             {
                 io.PlayerIOInteracted -= OnControlPanelInteracted;
             }
-            else if (io.gameObject.name == "SCP294Drawer")
+            else if (io.gameObject.name.Contains(DrawerName))
             {
                 io.PlayerIOInteracted -= OnDrawerInteracted;
             }
@@ -284,7 +287,7 @@ public class Scp294
         DrawerCount++;
         if (AudioPlayer is not null)
         {
-            AudioPlayer.AddClip(DispenseEffectAudio.Replace(".ogg", ""));
+            AudioPlayer.AddClip(DispenseEffectAudio);
         }
     }
 
@@ -331,20 +334,19 @@ public class Scp294
     {
         for (; ; )
         {
-            if (AmbientAudio.TryGetRandomItem(out string clip) && AudioPlayer is not null)
+            if (AudioPlayer is not null && AmbientAudio.TryGetRandomItem(out string clip))
             {
-                clip = clip.Replace(".ogg", "");
                 AudioPlayer.AddClip(clip);
-                Log.Debug($"Added random ambient audio clip '{clip}' to {AudioPlayer.Name}", print: Config.AudioDebug);
+                Log.Debug($"AmbientAudioCoroutine: Added random ambient audio clip '{clip}' to {AudioPlayer.Name}", print: Config.AudioDebug);
             }
             else
             {
-                Log.Debug($"Failed to get random ambient audio clip", print: Config.AudioDebug);
+                Log.Debug($"AmbientAudioCoroutine: Failed to get random ambient audio clip or AudioPlayer is null", print: Config.AudioDebug);
             }
 
             // Note: Each song is currently about 30s
             int waitTime = MainPlugin.Random.Next(60, 120);
-            Log.Debug($"Waiting {waitTime} seconds before playing next ambient audio clip", print: Config.AudioDebug);
+            Log.Debug($"AmbientAudioCoroutine: Waiting {waitTime} seconds before playing next ambient audio clip", print: Config.AudioDebug);
             yield return Timing.WaitForSeconds(waitTime);
         }
     }

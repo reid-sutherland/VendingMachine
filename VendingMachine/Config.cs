@@ -22,6 +22,9 @@ public sealed class Config : IConfig
     [Description("Whether debug logs from random chance rolls will show.")]
     public bool RollDebug { get; set; } = false;
 
+    [Description("Whether ambient audio should play from the vending machine.")]
+    public bool AmbientAudioEnabled { get; set; } = true;
+
     [Description("Whether or not probabilities should be additive (50 + 50 = 100) or not (50 + 50 = 2 seperate 50% chances).")]
     public bool AdditiveProbabilities { get; set; } = true;
 
