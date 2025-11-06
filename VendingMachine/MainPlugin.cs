@@ -23,7 +23,7 @@ public class MainPlugin : Plugin<Config>
 
     public override Version Version { get; } = new(1, 1, 0);
 
-    public override Version RequiredExiledVersion { get; } = new(9, 6, 1);
+    public override Version RequiredExiledVersion { get; } = new(9, 10, 1);
 
     public override PluginPriority Priority { get; } = PluginPriority.Low;
 
